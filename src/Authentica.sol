@@ -57,7 +57,7 @@ contract Authentica is Ownable {
         uint256 id, 
         bytes32 secret, 
         uint256 allowance
-    ) onlyOwner internal {
+    ) onlyOwner internal virtual {
         _hashedSecrets[id] = secret;
         _allowancePerSecret[id] = allowance;
     }
@@ -66,7 +66,7 @@ contract Authentica is Ownable {
         uint256[] memory ids, 
         bytes32[] memory secrets, 
         uint256[] memory allowances
-    ) onlyOwner internal {
+    ) onlyOwner internal virtual {
         uint256 idsLength = ids.length; 
         require(idsLength == secrets.length, "LENGTH_MISMATCH");
         require(idsLength == allowances.length, "LENGTH_MISMATCH");
@@ -93,7 +93,7 @@ contract Authentica is Ownable {
     function _pushCommitment (
         uint256 id, 
         bytes32 commitment
-    ) internal {
+    ) internal virtual {
         _commitments[msg.sender][id] = commitment;
         emit Commitment(msg.sender, id, commitment);
     }
@@ -101,7 +101,7 @@ contract Authentica is Ownable {
     function _batchPushCommitment (
         uint256[] memory ids, 
         bytes32[] memory commitments
-    ) internal {
+    ) internal virtual {
         uint256 commitmentsLength = commitments.length; 
         require(commitmentsLength == ids.length, "LENGTH_MISMATCH");
         for (uint256 i = 0; i < commitmentsLength; ) {
@@ -125,7 +125,7 @@ contract Authentica is Ownable {
         uint256 id, 
         uint256 amount, 
         bytes32 secret
-    ) internal {
+    ) internal virtual {
         require(keccak256(abi.encodePacked(secret)) == _hashedSecrets[id], "wrong secret");
         require(keccak256(abi.encodePacked(_addressToBytes32(msg.sender)^secret)) == _commitments[msg.sender][id]);
         require(amount <= _allowancePerSecret[id]);
@@ -136,7 +136,7 @@ contract Authentica is Ownable {
         uint256[] memory ids,
         uint256[] memory amounts,
         bytes32[] memory secrets
-    ) internal {
+    ) internal virtual {
         uint256 secretsLength = secrets.length; 
         require(secretsLength == ids.length, "LENGTH_MISMATCH");
         for (uint256 i = 0; i < secretsLength; ) {
