@@ -13,7 +13,7 @@ The problem with this approach is that many traditional art collectors do not ow
 1. Artist creates a work and mints an NFT representing it;
 2. Artist deploys an `Authentica` contract pointing to the NFT contract being used;
 3. Artist sets up one or more 'custodian' wallets and transfers the relevant NFTs there
-4. Custodian wallet must set `isApproveForAll` to `true` for the `Authentica` contract. This gives `Authentica` the possibility to transfer tokens from the custodian wallet.
+4. Custodian wallet must set `isApprovedForAll` to `true` for the `Authentica` contract. This gives `Authentica` the possibility to transfer tokens from the custodian wallet.
 5. Artist publishes a `secret` on `Authentica` corresponding to the `tokenId`, together with an `allowance` saying how many tokens of that id `secret` is allowed to withdraw.
 6. Artist prints the secret, e.g. on a QR code, and attaches it to the physical artwork during sale.
 
