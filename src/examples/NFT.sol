@@ -31,6 +31,7 @@ contract NFT is AccessControl, ERC1155 {
     /*///////////////////////////////////////////////////////////////
                             INTERFACE LOGIC
     //////////////////////////////////////////////////////////////*/
+
 /// @notice necessary as we inherit from both open-zeppelin and solmate
 
     function supportsInterface(bytes4 interfaceId) public pure override(AccessControl, ERC1155) returns (bool) {

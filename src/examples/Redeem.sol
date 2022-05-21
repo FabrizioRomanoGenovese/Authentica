@@ -16,6 +16,10 @@ contract Redeem is Authentica, MockERC1155 {
         token = MockERC1155(tokenAddress);
     }
 
+    /*///////////////////////////////////////////////////////////////
+                              SECRET LOGIC
+    //////////////////////////////////////////////////////////////*/
+    
     function pushSecret(
         bytes32 secret, 
         uint256 id, 
@@ -32,6 +36,10 @@ contract Redeem is Authentica, MockERC1155 {
         _batchPushSecret(secrets, ids, allowances);
     }
 
+    /*///////////////////////////////////////////////////////////////
+                              COMMITMENT LOGIC
+    //////////////////////////////////////////////////////////////*/
+
     function pushCommitment (
         bytes32 secret,
         bytes32 commitment
@@ -45,6 +53,11 @@ contract Redeem is Authentica, MockERC1155 {
     ) public {
         _batchPushCommitment(secrets, commitments);
     }
+
+    /*///////////////////////////////////////////////////////////////
+                              REVEAL LOGIC
+    //////////////////////////////////////////////////////////////*/
+
 
     function redeemArtwork (
         address custodian, 
