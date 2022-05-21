@@ -35,14 +35,14 @@ contract Redeem is Authentica, MockERC1155 {
     function pushCommitment (
         bytes32 secret,
         bytes32 commitment
-    ) internal {
+    ) public {
         _pushCommitment(secret, commitment);
     }
 
     function batchPushCommitment (
         bytes32[] memory secrets,
         bytes32[] memory commitments
-    ) internal {
+    ) public {
         _batchPushCommitment(secrets, commitments);
     }
 
@@ -65,5 +65,4 @@ contract Redeem is Authentica, MockERC1155 {
         uint256[] memory ids = _redeemBatchArtwork(keys, amounts);
         token.safeBatchTransferFrom(custodian, msg.sender, ids, amounts, data);
     }
-
 }
