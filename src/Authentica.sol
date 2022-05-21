@@ -41,6 +41,7 @@ contract Authentica is Ownable {
     mapping(address => mapping(bytes32 => bytes32)) private _commitments;
 
     uint256 private constant MINIMUM_DELAY = 1;
+    
     /*///////////////////////////////////////////////////////////////
                               SECRET LOGIC
     //////////////////////////////////////////////////////////////*/
