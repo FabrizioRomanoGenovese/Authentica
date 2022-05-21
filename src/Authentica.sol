@@ -35,7 +35,7 @@ contract Authentica is Ownable {
 ///     a commit-reveal scheme.
 /// @dev Commit is calculated by just hashing sender address XOR secret.
 
-    mapping(bytes32 => uint256 ) private _hashedSecrets;
+    mapping(bytes32 => uint256 ) private _tokenIds;
     mapping(bytes32 => uint256) private _allowancePerSecret;
     mapping(address => mapping(bytes32 => bytes32)) private _commitments;
 
@@ -43,10 +43,10 @@ contract Authentica is Ownable {
                               SECRET LOGIC
     //////////////////////////////////////////////////////////////*/
     
-    function checkSecret(
+    function checkId(
         bytes32 secret
     ) public view returns(uint256) {
-        return _hashedSecrets[secret];
+        return _tokenIds[secret];
     }
 
     function checkAllowance(
@@ -56,24 +56,24 @@ contract Authentica is Ownable {
     }
 
     function _pushSecret(
-        uint256 id, 
-        bytes32 secret, 
+        bytes32 secret,
+        uint256 id,
         uint256 allowance
     ) onlyOwner internal virtual {
-        _hashedSecrets[secret] = id;
+        _tokenIds[secret] = id;
         _allowancePerSecret[secret] = allowance;
     }
 
     function _batchPushSecret(
-        uint256[] memory ids, 
         bytes32[] memory secrets, 
+        uint256[] memory ids, 
         uint256[] memory allowances
     ) onlyOwner internal virtual {
         uint256 secretsLength = secrets.length; 
-        require(secretsLength >= secrets.length, "LENGTH_MISMATCH");
+        require(secretsLength >= ids.length, "LENGTH_MISMATCH");
         require(secretsLength == allowances.length, "LENGTH_MISMATCH");
         for (uint256 i = 0; i < secretsLength; ) {
-            _hashedSecrets[secrets[i]] = ids[i];
+            _tokenIds[secrets[i]] = ids[i];
             _allowancePerSecret[secrets[i]] = allowances[i];
             unchecked {
                 i++;
@@ -96,8 +96,8 @@ contract Authentica is Ownable {
         bytes32 secret,
         bytes32 commitment
     ) internal virtual {
-        _commitments[msg.sender][secret] = commitment;
-        emit Commitment(msg.sender, secret, commitment);
+        _commitments[_msgSender()][secret] = commitment;
+        emit Commitment(_msgSender(), secret, commitment);
     }
 
     function _batchPushCommitment (
@@ -107,12 +107,12 @@ contract Authentica is Ownable {
         uint256 secretsLength = secrets.length; 
         require(secretsLength == commitments.length, "LENGTH_MISMATCH");
         for (uint256 i = 0; i < secretsLength; ) {
-            _commitments[msg.sender][secrets[i]] = commitments[i];
+            _commitments[_msgSender()][secrets[i]] = commitments[i];
             unchecked {
                 i++;
             }
         }
-        emit BatchCommitment(msg.sender, secrets, commitments);
+        emit BatchCommitment(_msgSender(), secrets, commitments);
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -127,12 +127,11 @@ contract Authentica is Ownable {
         bytes32 key,
         uint256 amount
     ) internal virtual returns (uint256) {
-        //require(keccak256(abi.encodePacked(key)) == _hashedSecrets[secrets], "wrong secret");
         bytes32 secret = (keccak256(abi.encodePacked(key)));
-        require(keccak256(abi.encodePacked(_addressToBytes32(msg.sender)^key)) == _commitments[msg.sender][secret]);
+        require(keccak256(abi.encodePacked(_addressToBytes32(_msgSender())^key)) == _commitments[_msgSender()][secret]);
         require(amount <= _allowancePerSecret[secret]);
         _allowancePerSecret[secret] -= amount;
-        return _hashedSecrets[secret];
+        return _tokenIds[secret];
     }
 
     function _redeemBatchArtwork (
@@ -144,9 +143,9 @@ contract Authentica is Ownable {
         uint256[] memory ids;
         for (uint256 i = 0; i < keysLength; ) {
             bytes32 secret = (keccak256(abi.encodePacked(keys[i])));
-            require(keccak256(abi.encodePacked(_addressToBytes32(msg.sender)^keys[i])) == _commitments[msg.sender][secret]);
+            require(keccak256(abi.encodePacked(_addressToBytes32(_msgSender())^keys[i])) == _commitments[_msgSender()][secret]);
             _allowancePerSecret[secret] -= amounts[i];
-            ids[i] = _hashedSecrets[secret];
+            ids[i] = _tokenIds[secret];
             unchecked {
                 i++;
             }
