@@ -20,7 +20,7 @@ The problem with this approach is that many traditional art collectors do not ow
 --- 
 ...When collector finally sets up a wallet,
 1. Collector publishes a `commitment` on `Authentica`. This is nothing more than the hash of collector address XORed with `secret`.
-2. When the `commitment` is minted, collector reveals `secret`. `Authentica` verifies that secret and `commitment` check out and transfers the NFT from the custodian wallet to the collector wallet.
+2. When `commitment` is mined, collector reveals `secret`. `Authentica` verifies that secret and `commitment` check out and transfers the NFT from the custodian wallet to the collector wallet.
 
 The reason why we use a commit-reveal scheme is because [Etheremum is a Dark Forest](https://www.paradigm.xyz/2020/08/ethereum-is-a-dark-forest). A simpler solution would most certainly mean that collector's secret would be sniped before reaching a block.
 
