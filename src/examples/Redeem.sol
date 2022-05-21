@@ -1,18 +1,19 @@
 pragma solidity 0.8.13;
 
-import "solmate/tokens/ERC1155.sol";
+//import "solmate/tokens/ERC1155.sol";
+import {MockERC1155} from "solmate/test/utils/mocks/MockERC1155.sol";
 import "../Authentica.sol";
 
 /// @notice This contract must be deployed after the NFT contract.
 /// @notice Artist should set up a specific custodian wallet.
 /// @notice This contract should be set isApprovedForAll with respect to custodian.
 
-abstract contract Redeem is Authentica, ERC1155 {
+contract Redeem is Authentica, MockERC1155 {
 
-    ERC1155 token;
+    MockERC1155 token;
 
     constructor (address tokenAddress) {
-        token = ERC1155(tokenAddress);
+        token = MockERC1155(tokenAddress);
     }
 
     function pushSecret(
