@@ -32,7 +32,7 @@ The way `Authentica` should be used is by deploying it as a separate contract. A
 ## Risks
 - If collector deploys `secret` before `commitment` there's nothing we can do to avoid mempool sniping.
 - `allowance` in Authentica does not follow the NFT allowance. That is, you may mint 3 NFTs with id 0 and give an allowance of 500 for a secret pointing to id 0.
-Trying to spend the remaining allowance will revert unless tokens are returned to the custodian wallet. Long story short: It's up to the artist to set up `allowance` in a meaningful way.
+Trying to spend the remaining allowance will revert unless tokens are returned to a custodian wallet. Long story short: It's up to the artist to set up `allowance` in a meaningful way.
 - If a collector used `secret` and sells the artwork to a new collector lacking a wallet, a new `secret` can be provided but it requires the collaboration of whoever administers the `Authentica` contract - most likely the artist. This entails transferring the NFT back to a custodian wallet and pushing a new secret.
 
     Alternatively, the collector may set up a new `Authentica` contract pointing to the same NFT contract, but this seems like an overkill application unless collector owns an Art gallery or something along those lines.
