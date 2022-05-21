@@ -27,7 +27,7 @@ The reason why we use a commit-reveal scheme is because [Etheremum is a Dark For
 ## Usage
 This is your standard Foundry project. Refer to [Foundry Github Page](https://github.com/foundry-rs/foundry) for more info.
 
-The way `Authentica` should be used is by deploying it as a separate contract. An example of this is provided in the `src/examples/` folder: We deploy an NFT ERC1155 contract first, and then we deploy a contract inheriting from Authentica pointing to it.
+The way `Authentica` should be used is by deploying it as a separate contract. An example of this is provided in the `src/examples/` folder: We deploy a NFT ERC1155 contract first, and then we deploy a contract inheriting from Authentica pointing to it.
 
 ## Risks
 - If collector deploys `secret` before `commitment` there's nothing we can do to avoid mempool sniping.
