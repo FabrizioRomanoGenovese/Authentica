@@ -53,20 +53,20 @@ contract Authentica is Ownable {
         return _allowancePerSecret[id];
     }
 
-    function pushSecret(
+    function _pushSecret(
         uint256 id, 
         bytes32 secret, 
         uint256 allowance
-    ) onlyOwner public {
+    ) onlyOwner internal {
         _hashedSecrets[id] = secret;
         _allowancePerSecret[id] = allowance;
     }
 
-    function batchPushSecret(
+    function _batchPushSecret(
         uint256[] memory ids, 
         bytes32[] memory secrets, 
         uint256[] memory allowances
-    ) onlyOwner public {
+    ) onlyOwner internal {
         uint256 idsLength = ids.length; 
         require(idsLength == secrets.length, "LENGTH_MISMATCH");
         require(idsLength == allowances.length, "LENGTH_MISMATCH");
@@ -90,18 +90,18 @@ contract Authentica is Ownable {
         return _commitments[person][id];
     }
 
-    function pushCommitment (
+    function _pushCommitment (
         uint256 id, 
         bytes32 commitment
-    ) public {
+    ) internal {
         _commitments[msg.sender][id] = commitment;
         emit Commitment(msg.sender, id, commitment);
     }
 
-    function batchPushCommitment (
+    function _batchPushCommitment (
         uint256[] memory ids, 
         bytes32[] memory commitments
-    ) public {
+    ) internal {
         uint256 commitmentsLength = commitments.length; 
         require(commitmentsLength == ids.length, "LENGTH_MISMATCH");
         for (uint256 i = 0; i < commitmentsLength; ) {

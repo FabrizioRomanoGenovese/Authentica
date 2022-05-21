@@ -15,6 +15,36 @@ abstract contract Redeem is Authentica, ERC1155 {
         token = ERC1155(tokenAddress);
     }
 
+    function pushSecret(
+        uint256 id, 
+        bytes32 secret, 
+        uint256 allowance
+    ) public {
+        _pushSecret(id, secret, allowance);
+    }
+
+    function batchPushSecret(
+        uint256[] memory ids, 
+        bytes32[] memory secrets, 
+        uint256[] memory allowances
+    ) public {
+        _batchPushSecret(ids, secrets, allowances);
+    }
+
+    function pushCommitment (
+        uint256 id, 
+        bytes32 commitment
+    ) internal {
+        _pushCommitment(id, commitment);
+    }
+
+    function batchPushCommitment (
+        uint256[] memory ids, 
+        bytes32[] memory commitments
+    ) internal {
+        _batchPushCommitment(ids, commitments);
+    }
+
     function redeemArtwork (
         address custodian, 
         uint256 id, 
