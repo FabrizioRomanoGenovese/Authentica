@@ -37,8 +37,10 @@ contract Authentica is Ownable {
 
     mapping(bytes32 => uint256 ) private _tokenIds;
     mapping(bytes32 => uint256) private _allowancePerSecret;
+    mapping(bytes32 => uint256 ) private _blockTime;
     mapping(address => mapping(bytes32 => bytes32)) private _commitments;
 
+    uint256 private constant MINIMUM_DELAY = 5;
     /*///////////////////////////////////////////////////////////////
                               SECRET LOGIC
     //////////////////////////////////////////////////////////////*/
@@ -70,8 +72,8 @@ contract Authentica is Ownable {
         uint256[] memory allowances
     ) onlyOwner internal virtual {
         uint256 secretsLength = secrets.length; 
-        require(secretsLength >= ids.length, "LENGTH_MISMATCH");
-        require(secretsLength == allowances.length, "LENGTH_MISMATCH");
+        require(secretsLength >= ids.length, "Length mismatch.");
+        require(secretsLength == allowances.length, "Length mismatch.");
         for (uint256 i = 0; i < secretsLength; ) {
             _tokenIds[secrets[i]] = ids[i];
             _allowancePerSecret[secrets[i]] = allowances[i];
@@ -97,6 +99,7 @@ contract Authentica is Ownable {
         bytes32 commitment
     ) internal virtual {
         _commitments[_msgSender()][secret] = commitment;
+        _blockTime[secret] = block.timestamp;
         emit Commitment(_msgSender(), secret, commitment);
     }
 
@@ -105,9 +108,10 @@ contract Authentica is Ownable {
         bytes32[] memory commitments
     ) internal virtual {
         uint256 secretsLength = secrets.length; 
-        require(secretsLength == commitments.length, "LENGTH_MISMATCH");
+        require(secretsLength == commitments.length, "Length mismatch.");
         for (uint256 i = 0; i < secretsLength; ) {
             _commitments[_msgSender()][secrets[i]] = commitments[i];
+            _blockTime[secrets[i]] = block.timestamp;
             unchecked {
                 i++;
             }
@@ -128,8 +132,14 @@ contract Authentica is Ownable {
         uint256 amount
     ) internal virtual returns (uint256) {
         bytes32 secret = (keccak256(abi.encodePacked(key)));
-        require(keccak256(abi.encodePacked(_addressToBytes32(_msgSender())^key)) == _commitments[_msgSender()][secret]);
-        require(amount <= _allowancePerSecret[secret]);
+        require(
+            keccak256(
+                abi.encodePacked(
+                    _addressToBytes32(_msgSender())^key
+                )
+            ) == _commitments[_msgSender()][secret], "Reveal and commit do not match.");
+        require(amount <= _allowancePerSecret[secret], "Reached allowance limit.");
+        require(_blockTime[secret] + MINIMUM_DELAY <= block.timestamp, "Delay not passed.");
         _allowancePerSecret[secret] -= amount;
         return _tokenIds[secret];
     }
@@ -139,11 +149,18 @@ contract Authentica is Ownable {
         uint256[] memory amounts
     ) internal virtual returns (uint256[] memory) {
         uint256 keysLength = keys.length;
-        require(keysLength == amounts.length, "LENGTH_MISMATCH");
+        require(keysLength == amounts.length, "Length mismatch.");
         uint256[] memory ids;
         for (uint256 i = 0; i < keysLength; ) {
             bytes32 secret = (keccak256(abi.encodePacked(keys[i])));
-            require(keccak256(abi.encodePacked(_addressToBytes32(_msgSender())^keys[i])) == _commitments[_msgSender()][secret]);
+            require(
+                keccak256(
+                    abi.encodePacked(
+                        _addressToBytes32(_msgSender())^keys[i]
+                    )
+                ) == _commitments[_msgSender()][secret], "Reveal and commit do not match.");
+            require(amounts[i] <= _allowancePerSecret[secret], "Reached allowance limit.");
+            require(_blockTime[secret] + MINIMUM_DELAY <= block.timestamp, "Delay not passed.");
             _allowancePerSecret[secret] -= amounts[i];
             ids[i] = _tokenIds[secret];
             unchecked {
