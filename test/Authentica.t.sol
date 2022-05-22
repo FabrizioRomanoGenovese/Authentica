@@ -45,6 +45,10 @@ contract MockAuthentica is Authentica {
         _batchPushCommitment(secrets, commitments);
     }
 
+    /*///////////////////////////////////////////////////////////////
+                              REVEAL LOGIC
+    //////////////////////////////////////////////////////////////*/
+
     function redeemArtwork (
         bytes32 key,
         uint256 amount
