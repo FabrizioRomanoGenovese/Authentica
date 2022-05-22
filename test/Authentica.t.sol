@@ -292,6 +292,4 @@ contract AuthenticaTest is AuthenticaOwner, Test {
 }
 
 
-
-
  
