@@ -7,6 +7,10 @@ import "../src/Authentica.sol";
 
 contract MockAuthentica is Authentica {
 
+    /*///////////////////////////////////////////////////////////////
+                              SECRET LOGIC
+    //////////////////////////////////////////////////////////////*/
+
     function pushSecret(
         bytes32 secret, 
         uint256 id, 
@@ -22,6 +26,10 @@ contract MockAuthentica is Authentica {
     ) public {
         _batchPushSecret(secrets, ids, allowances);
     }
+
+    /*///////////////////////////////////////////////////////////////
+                              COMMITMENT LOGIC
+    //////////////////////////////////////////////////////////////*/
 
     function pushCommitment (
         bytes32 secret,
@@ -60,6 +68,10 @@ contract AuthenticaUser {
         authentica = cntrct;
     }
 
+    /*///////////////////////////////////////////////////////////////
+                              SECRET LOGIC
+    //////////////////////////////////////////////////////////////*/
+
     function callCheckId(
         bytes32 secret
     ) public view returns(uint256) {
@@ -82,6 +94,10 @@ contract AuthenticaUser {
         authentica.batchPushSecret(secrets, ids, allowances);
     }
 
+    /*///////////////////////////////////////////////////////////////
+                              COMMITMENT LOGIC
+    //////////////////////////////////////////////////////////////*/
+
 }
 
 contract AuthenticaOwner {
@@ -99,6 +115,10 @@ contract AuthenticaOwner {
         return authentica.owner();
     }
 
+    /*///////////////////////////////////////////////////////////////
+                              SECRET LOGIC
+    //////////////////////////////////////////////////////////////*/
+
     function callPushSecret(
         bytes32 secret, 
         uint256 id, 
@@ -114,6 +134,11 @@ contract AuthenticaOwner {
     ) public {
         authentica.batchPushSecret(secrets, ids, allowances);
     }
+
+    /*///////////////////////////////////////////////////////////////
+                              COMMITMENT LOGIC
+    //////////////////////////////////////////////////////////////*/
+
 }
 
 contract AuthenticaTest is AuthenticaOwner, Test {
@@ -129,6 +154,10 @@ contract AuthenticaTest is AuthenticaOwner, Test {
         assertEq(address(authenticaOwner), authenticaOwner.callOwner());
     }
 
+    /*///////////////////////////////////////////////////////////////
+                              SECRET LOGIC
+    //////////////////////////////////////////////////////////////*/
+    
     function testPushSecretOwner(
         bytes32 secret, 
         uint256 id, 
@@ -288,6 +317,11 @@ contract AuthenticaTest is AuthenticaOwner, Test {
         uint256 result = authenticaUser.callCheckId(secret);
         assertEq(result, id);
     }
+
+    /*///////////////////////////////////////////////////////////////
+                              COMMITMENT LOGIC
+    //////////////////////////////////////////////////////////////*/
+
 
 }
 
