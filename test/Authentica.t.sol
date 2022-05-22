@@ -129,7 +129,6 @@ contract AuthenticaTest is AuthenticaOwner, Test {
         assertEq(address(authenticaOwner), authenticaOwner.callOwner());
     }
 
-
     function testPushSecretOwner(
         bytes32 secret, 
         uint256 id, 
@@ -147,18 +146,6 @@ contract AuthenticaTest is AuthenticaOwner, Test {
         authenticaUser.callPushSecret(secret, id, allowance);
     }
 
-    // // Fails due to many global rejects
-    // // function testBatchPushSecretOwner(
-    // //     bytes32[] memory secrets, 
-    // //     uint256[] memory ids, 
-    // //     uint256[] memory allowances
-    // // ) public {
-    // //     vm.assume(secrets.length <= 10);
-    // //     vm.assume(secrets.length == ids.length);
-    // //     vm.assume(secrets.length == allowances.length);
-    // //     authenticaOwner.batchPushSecret(secrets, ids, allowances);
-    // // }
-
     function testBatchPushSecretOwner() public {
         bytes32[] memory secrets = new bytes32[](3);
         secrets[0] = "hello";
@@ -173,6 +160,87 @@ contract AuthenticaTest is AuthenticaOwner, Test {
         allowances[1] = 3928;
         allowances[2] = 274;
         authenticaOwner.callBatchPushSecret(secrets, ids, allowances);
+    }
+
+    function testBatchPushSecretOwner(
+        bytes32[] memory secrets, 
+        uint256[] memory ids, 
+        uint256[] memory allowances,
+        uint64 l
+    ) public {
+        vm.assume(secrets.length > l);
+        vm.assume(ids.length > l);
+        vm.assume(allowances.length > l);
+        bytes32[] memory newSecrets = new bytes32[](l);
+        for (uint8 i = 0; i < l; ) {
+            newSecrets[i] = secrets[i];
+            unchecked {
+                i++;
+            }
+        }
+        uint256[] memory newIds = new uint256[](l);
+        for (uint8 i = 0; i < l; ) {
+            newIds[i] = ids[i];
+            unchecked {
+                i++;
+            }
+        }
+        uint256[] memory newAllowances = new uint256[](l);
+        for (uint8 i = 0; i < l; ) {
+            newAllowances[i] = allowances[i];
+            unchecked {
+                i++;
+            }
+        }
+        authenticaOwner.callBatchPushSecret(newSecrets, newIds, newAllowances);
+    }
+
+    function testBatchPushSecretUser() public {
+        vm.expectRevert('Ownable: caller is not the owner');
+        bytes32[] memory secrets = new bytes32[](2);
+        secrets[0] = "hello";
+        secrets[1] = "world";
+        uint256[] memory ids = new uint256[](2);
+        ids[0] = 4;
+        ids[1] = 345989;
+        uint256[] memory allowances = new uint256[](2);
+        allowances[0] = 47582;
+        allowances[1] = 3928;
+        authenticaUser.callBatchPushSecret(secrets, ids, allowances);
+    }
+
+    function testBatchPushSecretUser(
+        bytes32[] memory secrets, 
+        uint256[] memory ids, 
+        uint256[] memory allowances,
+        uint64 l
+    ) public {
+        vm.expectRevert('Ownable: caller is not the owner');
+        vm.assume(secrets.length > l);
+        vm.assume(ids.length > l);
+        vm.assume(allowances.length > l);
+        bytes32[] memory newSecrets = new bytes32[](l);
+        for (uint8 i = 0; i < l; ) {
+            newSecrets[i] = secrets[i];
+            unchecked {
+                i++;
+            }
+        }
+        uint256[] memory newIds = new uint256[](l);
+        for (uint8 i = 0; i < l; ) {
+            newIds[i] = ids[i];
+            unchecked {
+                i++;
+            }
+        }
+        uint256[] memory newAllowances = new uint256[](l);
+        for (uint8 i = 0; i < l; ) {
+            newAllowances[i] = allowances[i];
+            unchecked {
+                i++;
+            }
+        }
+        authenticaUser.callBatchPushSecret(newSecrets, newIds, newAllowances);
     }
 
     function testBatchPushSecretMismatch() public {
@@ -191,51 +259,18 @@ contract AuthenticaTest is AuthenticaOwner, Test {
         authenticaOwner.callBatchPushSecret(secrets, ids, allowances);
     }
 
-    function testBatchPushSecretMismatch2() public {
+    function testBatchPushSecretMismatch(
+        bytes32[] memory secrets, 
+        uint256[] memory ids, 
+        uint256[] memory allowances
+    ) public {
         vm.expectRevert('Length mismatch.');
-        bytes32[] memory secrets = new bytes32[](3);
-        secrets[0] = "hello";
-        secrets[1] = "world";
-        secrets[2] = "everyone";
-        uint256[] memory ids = new uint256[](2);
-        ids[0] = 4;
-        ids[1] = 345989;
-        uint256[] memory allowances = new uint256[](3);
-        allowances[0] = 47582;
-        allowances[1] = 3928;
-        allowances[2] = 274;
+        vm.assume(
+            secrets.length != ids.length ||
+            secrets.length != allowances.length ||
+            ids.length != allowances.length
+        );
         authenticaOwner.callBatchPushSecret(secrets, ids, allowances);
-    }
-
-
-    function testBatchPushSecretMismatch3() public {
-        vm.expectRevert('Length mismatch.');
-        bytes32[] memory secrets = new bytes32[](3);
-        secrets[0] = "hello";
-        secrets[1] = "world";
-        secrets[2] = "everyone";
-        uint256[] memory ids = new uint256[](3);
-        ids[0] = 4;
-        ids[1] = 345989;
-        ids[2] = 84795;
-        uint256[] memory allowances = new uint256[](2);
-        allowances[0] = 47582;
-        allowances[1] = 274;
-        authenticaOwner.callBatchPushSecret(secrets, ids, allowances);
-    }
-
-    function testBatchPushSecretUser() public {
-        vm.expectRevert('Ownable: caller is not the owner');
-        bytes32[] memory secrets = new bytes32[](2);
-        secrets[0] = "hello";
-        secrets[1] = "world";
-        uint256[] memory ids = new uint256[](2);
-        ids[0] = 4;
-        ids[1] = 345989;
-        uint256[] memory allowances = new uint256[](2);
-        allowances[0] = 47582;
-        allowances[1] = 3928;
-        authenticaUser.callBatchPushSecret(secrets, ids, allowances);
     }
 
     function testPushAndCheck() public {
