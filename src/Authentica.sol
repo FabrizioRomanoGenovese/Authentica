@@ -73,7 +73,7 @@ contract Authentica is Ownable {
         uint256[] memory allowances
     ) onlyOwner internal virtual {
         uint256 secretsLength = secrets.length; 
-        require(secretsLength >= ids.length, "Length mismatch.");
+        require(secretsLength == ids.length, "Length mismatch.");
         require(secretsLength == allowances.length, "Length mismatch.");
         for (uint256 i = 0; i < secretsLength; ) {
             _tokenIds[secrets[i]] = ids[i];
