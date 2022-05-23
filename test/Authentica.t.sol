@@ -176,6 +176,7 @@ contract AuthenticaTest is MockAuthentica, Test {
     /*///////////////////////////////////////////////////////////////
                               COMMITMENT LOGIC
     //////////////////////////////////////////////////////////////*/
+
     function testPushCommitment() public {
         vm.prank(address(0xBEEF));
         authentica.pushCommitment("secret", "commitment");
@@ -290,4 +291,116 @@ contract AuthenticaTest is MockAuthentica, Test {
             }
         }
     }
+
+    function testFailBatchPushCommitmentWrongSecret() public {
+        bytes32[] memory secrets1 = new bytes32[](2);
+            secrets1[0] = "secret11";
+            secrets1[1] = "secret12";
+        bytes32[] memory commitments1 = new bytes32[](2);
+            commitments1[0] = "commitment11";
+            commitments1[1] = "commitment12";
+        bytes32[] memory secrets2 = new bytes32[](2);
+            secrets2[0] = "secret21";
+            secrets2[1] = "secret22";
+        bytes32[] memory commitments2 = new bytes32[](2);
+            commitments2[0] = "commitment21";
+            commitments2[1] = "commitment22";
+        vm.prank(address(0xBEEF));
+        authentica.batchPushCommitment(secrets1, commitments1);
+        vm.prank(address(0xBEEF));
+        authentica.batchPushCommitment(secrets2, commitments2);
+        assertEq(commitments2[0], authentica.checkCommitment(address(0xBEEF), secrets1[0]));
+        assertEq(commitments2[1], authentica.checkCommitment(address(0xBEEF), secrets1[1]));
+    }
+
+    function testFailBatchPushCommitmentWrongAddress() public {
+        bytes32[] memory secrets1 = new bytes32[](2);
+            secrets1[0] = "secret11";
+            secrets1[1] = "secret12";
+        bytes32[] memory commitments1 = new bytes32[](2);
+            commitments1[0] = "commitment11";
+            commitments1[1] = "commitment12";
+        bytes32[] memory secrets2 = new bytes32[](2);
+            secrets2[0] = "secret21";
+            secrets2[1] = "secret22";
+        bytes32[] memory commitments2 = new bytes32[](2);
+            commitments2[0] = "commitment21";
+            commitments2[1] = "commitment22";
+        vm.prank(address(0xBEEF));
+        authentica.batchPushCommitment(secrets1, commitments1);
+        vm.prank(address(0xDEADBEEF));
+        authentica.batchPushCommitment(secrets2, commitments2);
+        assertEq(
+            authentica.checkCommitment(address(0xBEEF), secrets1[0]), 
+            authentica.checkCommitment(address(0xDEADBEEF), secrets2[0])
+        );
+        assertEq(
+            authentica.checkCommitment(address(0xBEEF), secrets1[1]), 
+            authentica.checkCommitment(address(0xDEADBEEF), secrets2[1])
+        );
+    }
+
+    function testBatchPushCommitmentOverwrite() public {
+        bytes32[] memory secrets1 = new bytes32[](2);
+            secrets1[0] = "secret11";
+            secrets1[1] = "secret12";
+        bytes32[] memory commitments1 = new bytes32[](2);
+            commitments1[0] = "commitment11";
+            commitments1[1] = "commitment12";
+        bytes32[] memory commitments2 = new bytes32[](2);
+            commitments2[0] = "commitment21";
+            commitments2[1] = "commitment22";
+        vm.prank(address(0xBEEF));
+        authentica.batchPushCommitment(secrets1, commitments1);
+        vm.prank(address(0xBEEF));
+        authentica.batchPushCommitment(secrets1, commitments2);
+        assertEq(commitments2[0], authentica.checkCommitment(address(0xBEEF), secrets1[0]));
+        assertEq(commitments2[1], authentica.checkCommitment(address(0xBEEF), secrets1[1]));
+    }
+
+    function testFailBatchPushCommitmentWrongEverything(
+        bytes32[] memory secrets1,
+        bytes32[] memory secrets2,
+        bytes32[] memory commitments1,
+        bytes32[] memory commitments2,
+        address user1,
+        address user2
+    ) public {
+        // If users and secrets are both equal commitments get overwritten.
+        if (user1 == user2) {
+            for (uint64 i = 0; (i < secrets1.length || i < secrets2.length); ) {
+                vm.assume(secrets1[i] != secrets2[i]);
+                unchecked {
+                    i++;
+                }
+            }
+            for (uint64 i = 0; (i < commitments1.length || i < commitments2.length); ) {
+                vm.assume(commitments1[i] != commitments2[i]);
+                unchecked {
+                    i++;
+                }
+            }
+        } else {
+            for (uint64 i = 0; (i < commitments1.length || i < commitments2.length); ) {
+                vm.assume(commitments1[i] != commitments2[i]);
+                unchecked {
+                    i++;
+                }
+            }
+        }
+        vm.prank(user1);
+        authentica.batchPushCommitment(secrets1, commitments1);
+        vm.prank(user2);
+        authentica.batchPushCommitment(secrets2, commitments2);
+        for (uint64 i = 0; (i < secrets1.length || i < secrets2.length); ) {
+            assertEq(authentica.checkCommitment(user1, secrets1[i]), authentica.checkCommitment(user2, secrets2[i]));
+            unchecked {
+                i++;
+            }
+        }
+    }
+
+    /*///////////////////////////////////////////////////////////////
+                              REVEAL LOGIC
+    //////////////////////////////////////////////////////////////*/
 }
