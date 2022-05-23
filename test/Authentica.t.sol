@@ -20,17 +20,17 @@ contract AuthenticaTest is MockAuthentica, Test {
     /*///////////////////////////////////////////////////////////////
                               SECRET LOGIC
     //////////////////////////////////////////////////////////////*/
-    
+
     function testPushSecretOwner(
-        bytes32 secret, 
-        uint256 id, 
+        bytes32 secret,
+        uint256 id,
         uint256 allowance
     ) public {
         authentica.pushSecret(secret, id, allowance);
     }
 
     function testPushSecretUser(
-        bytes32 secret, 
+        bytes32 secret,
         uint256 id,
         uint256 allowance,
         address user
@@ -58,8 +58,8 @@ contract AuthenticaTest is MockAuthentica, Test {
     }
 
     function testBatchPushSecretOwner(
-        bytes32[] memory secrets, 
-        uint256[] memory ids, 
+        bytes32[] memory secrets,
+        uint256[] memory ids,
         uint256[] memory allowances,
         uint64 l
     ) public {
@@ -96,8 +96,8 @@ contract AuthenticaTest is MockAuthentica, Test {
     }
 
     function testBatchPushSecretUser(
-        bytes32[] memory secrets, 
-        uint256[] memory ids, 
+        bytes32[] memory secrets,
+        uint256[] memory ids,
         uint256[] memory allowances,
         uint64 l,
         address user
@@ -141,8 +141,8 @@ contract AuthenticaTest is MockAuthentica, Test {
     }
 
     function testBatchPushSecretMismatch(
-        bytes32[] memory secrets, 
-        uint256[] memory ids, 
+        bytes32[] memory secrets,
+        uint256[] memory ids,
         uint256[] memory allowances
     ) public {
         vm.expectRevert('Length mismatch.');
@@ -162,8 +162,8 @@ contract AuthenticaTest is MockAuthentica, Test {
     }
 
     function testPushAndCheck(
-        bytes32 secret, 
-        uint256 id, 
+        bytes32 secret,
+        uint256 id,
         uint256 allowance,
         address user
     ) public {
@@ -233,14 +233,14 @@ contract AuthenticaTest is MockAuthentica, Test {
         } else {
             vm.assume(
                 commitment1 != commitment2
-            );  
+            );
         }
         vm.prank(user1);
         authentica.pushCommitment(secret1, commitment1);
         vm.prank(user2);
         authentica.pushCommitment(secret2, commitment2);
         assertEq(authentica.checkCommitment(user1, secret1), authentica.checkCommitment(user2, secret2));
-    } 
+    }
 
     function testBatchPushCommitment() public {
         vm.prank(address(0xBEEF));
@@ -288,6 +288,6 @@ contract AuthenticaTest is MockAuthentica, Test {
             unchecked {
                 i++;
             }
-        }    
-    }   
+        }
+    }
 }

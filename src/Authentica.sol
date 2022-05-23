@@ -25,7 +25,7 @@ contract Authentica is Ownable {
     //////////////////////////////////////////////////////////////*/
 
 /// @notice The owner of the contract publishes hashes of secrets
-///    that allow to redeem a token with a certain id. 
+///    that allow to redeem a token with a certain id.
 ///    As we focus on ERC1155 every secret has a given allowance.
 /// @dev Hashed secrets are just keccak256 hashes of secrets.
 ///    Multiple secrets can point to the same tokenId. This is in
@@ -41,11 +41,11 @@ contract Authentica is Ownable {
     mapping(address => mapping(bytes32 => bytes32)) private _commitments;
 
     uint256 private constant MINIMUM_DELAY = 1;
-    
+
     /*///////////////////////////////////////////////////////////////
                               SECRET LOGIC
     //////////////////////////////////////////////////////////////*/
-    
+
     function checkId(
         bytes32 secret
     ) public view returns(uint256) {
@@ -67,16 +67,16 @@ contract Authentica is Ownable {
         _allowancePerSecret[secret] = allowance;
     }
 
-/// @notice Same secret can show up multiple times 
+/// @notice Same secret can show up multiple times
 /// in the same array, and parameters get overwritten.
 /// As best practice, check your array for repeated
 /// entries before submitting. (doing it on-chain is too gas pricey).
     function _batchPushSecret(
-        bytes32[] memory secrets, 
-        uint256[] memory ids, 
+        bytes32[] memory secrets,
+        uint256[] memory ids,
         uint256[] memory allowances
     ) onlyOwner internal virtual {
-        uint256 secretsLength = secrets.length; 
+        uint256 secretsLength = secrets.length;
         require(secretsLength == ids.length, "Length mismatch.");
         require(secretsLength == allowances.length, "Length mismatch.");
         for (uint256 i = 0; i < secretsLength; ) {
@@ -108,7 +108,7 @@ contract Authentica is Ownable {
         emit Commitment(_msgSender(), secret, commitment);
     }
 
-/// @notice Same secret can show up multiple times 
+/// @notice Same secret can show up multiple times
 /// in the same array, and parameters get overwritten.
 /// As best practice, check your array for repeated
 /// entries before submitting. (doing it on-chain is too gas pricey).
@@ -116,7 +116,7 @@ contract Authentica is Ownable {
         bytes32[] memory secrets,
         bytes32[] memory commitments
     ) internal virtual {
-        uint256 secretsLength = secrets.length; 
+        uint256 secretsLength = secrets.length;
         require(secretsLength == commitments.length, "Length mismatch.");
         for (uint256 i = 0; i < secretsLength; ) {
             _commitments[_msgSender()][secrets[i]] = commitments[i];

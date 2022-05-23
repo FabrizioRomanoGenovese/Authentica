@@ -10,16 +10,16 @@ contract MockAuthentica is Authentica {
     //////////////////////////////////////////////////////////////*/
 
     function pushSecret(
-        bytes32 secret, 
-        uint256 id, 
+        bytes32 secret,
+        uint256 id,
         uint256 allowance
     ) public {
         _pushSecret(secret, id, allowance);
     }
 
     function batchPushSecret(
-        bytes32[] memory secrets, 
-        uint256[] memory ids, 
+        bytes32[] memory secrets,
+        uint256[] memory ids,
         uint256[] memory allowances
     ) public {
         _batchPushSecret(secrets, ids, allowances);
