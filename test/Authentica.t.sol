@@ -43,17 +43,17 @@ contract AuthenticaTest is MockAuthentica, Test {
 
     function testBatchPushSecretOwner() public {
         bytes32[] memory secrets = new bytes32[](3);
-        secrets[0] = "hello";
-        secrets[1] = "world";
-        secrets[2] = "everyone";
+            secrets[0] = "hello";
+            secrets[1] = "world";
+            secrets[2] = "everyone";
         uint256[] memory ids = new uint256[](3);
-        ids[0] = 4;
-        ids[1] = 345989;
-        ids[2] = 84795;
+            ids[0] = 4;
+            ids[1] = 345989;
+            ids[2] = 84795;
         uint256[] memory allowances = new uint256[](3);
-        allowances[0] = 47582;
-        allowances[1] = 3928;
-        allowances[2] = 274;
+            allowances[0] = 47582;
+            allowances[1] = 3928;
+            allowances[2] = 274;
         authentica.batchPushSecret(secrets, ids, allowances);
     }
 
@@ -67,21 +67,11 @@ contract AuthenticaTest is MockAuthentica, Test {
         vm.assume(ids.length > l);
         vm.assume(allowances.length > l);
         bytes32[] memory newSecrets = new bytes32[](l);
-        for (uint8 i = 0; i < l; ) {
-            newSecrets[i] = secrets[i];
-            unchecked {
-                i++;
-            }
-        }
         uint256[] memory newIds = new uint256[](l);
-        for (uint8 i = 0; i < l; ) {
-            newIds[i] = ids[i];
-            unchecked {
-                i++;
-            }
-        }
         uint256[] memory newAllowances = new uint256[](l);
-        for (uint8 i = 0; i < l; ) {
+        for (uint64 i = 0; i < l; ) {
+            newSecrets[i] = secrets[i];
+            newIds[i] = ids[i];
             newAllowances[i] = allowances[i];
             unchecked {
                 i++;
@@ -94,14 +84,14 @@ contract AuthenticaTest is MockAuthentica, Test {
         vm.expectRevert('Ownable: caller is not the owner');
         vm.prank(address(0xBEEF));
         bytes32[] memory secrets = new bytes32[](2);
-        secrets[0] = "hello";
-        secrets[1] = "world";
+            secrets[0] = "hello";
+            secrets[1] = "world";
         uint256[] memory ids = new uint256[](2);
-        ids[0] = 4;
-        ids[1] = 345989;
+            ids[0] = 4;
+            ids[1] = 345989;
         uint256[] memory allowances = new uint256[](2);
-        allowances[0] = 47582;
-        allowances[1] = 3928;
+            allowances[0] = 47582;
+            allowances[1] = 3928;
         authentica.batchPushSecret(secrets, ids, allowances);
     }
 
@@ -115,25 +105,17 @@ contract AuthenticaTest is MockAuthentica, Test {
         vm.expectRevert('Ownable: caller is not the owner');
         vm.assume(user != address(this));
         vm.prank(user);
-        vm.assume(secrets.length > l);
-        vm.assume(ids.length > l);
-        vm.assume(allowances.length > l);
+        vm.assume(
+            secrets.length > l &&
+            ids.length > l &&
+            allowances.length > l
+        );
         bytes32[] memory newSecrets = new bytes32[](l);
-        for (uint8 i = 0; i < l; ) {
-            newSecrets[i] = secrets[i];
-            unchecked {
-                i++;
-            }
-        }
         uint256[] memory newIds = new uint256[](l);
-        for (uint8 i = 0; i < l; ) {
-            newIds[i] = ids[i];
-            unchecked {
-                i++;
-            }
-        }
         uint256[] memory newAllowances = new uint256[](l);
-        for (uint8 i = 0; i < l; ) {
+        for (uint64 i = 0; i < l; ) {
+            newSecrets[i] = secrets[i];
+            newIds[i] = ids[i];
             newAllowances[i] = allowances[i];
             unchecked {
                 i++;
@@ -145,16 +127,16 @@ contract AuthenticaTest is MockAuthentica, Test {
     function testBatchPushSecretMismatch() public {
         vm.expectRevert('Length mismatch.');
         bytes32[] memory secrets = new bytes32[](2);
-        secrets[0] = "hello";
-        secrets[1] = "world";
+            secrets[0] = "hello";
+            secrets[1] = "world";
         uint256[] memory ids = new uint256[](3);
-        ids[0] = 4;
-        ids[1] = 345989;
-        ids[2] = 84795;
+            ids[0] = 4;
+            ids[1] = 345989;
+            ids[2] = 84795;
         uint256[] memory allowances = new uint256[](3);
-        allowances[0] = 47582;
-        allowances[1] = 3928;
-        allowances[2] = 274;
+            allowances[0] = 47582;
+            allowances[1] = 3928;
+            allowances[2] = 274;
         authentica.batchPushSecret(secrets, ids, allowances);
     }
 
@@ -245,34 +227,67 @@ contract AuthenticaTest is MockAuthentica, Test {
         // If users and secrets are both equal commitments get overwritten.
         if (user1 == user2) {
             vm.assume(
-                secret1 != secret2
+                secret1 != secret2 &&
+                commitment1 != commitment2
             );
         } else {
             vm.assume(
-                secret1 != secret2 ||
                 commitment1 != commitment2
             );  
         }
         vm.prank(user1);
         authentica.pushCommitment(secret1, commitment1);
         vm.prank(user2);
-        authentica.pushCommitment(secret1, commitment2);
+        authentica.pushCommitment(secret2, commitment2);
         assertEq(authentica.checkCommitment(user1, secret1), authentica.checkCommitment(user2, secret2));
     } 
 
     function testBatchPushCommitment() public {
         vm.prank(address(0xBEEF));
         bytes32[] memory secrets = new bytes32[](2);
-        secrets[0] = "secret1";
-        secrets[1] = "secret2";
+            secrets[0] = "secret1";
+            secrets[1] = "secret2";
         bytes32[] memory commitments = new bytes32[](2);
-        commitments[0] = "commitment1";
-        commitments[1] = "commitment2";
+            commitments[0] = "commitment1";
+            commitments[1] = "commitment2";
         authentica.batchPushCommitment(secrets, commitments);
         assertEq(commitments[0], authentica.checkCommitment(address(0xBEEF), secrets[0]));
         assertEq(commitments[1], authentica.checkCommitment(address(0xBEEF), secrets[1]));
     }
+
+    function testBatchPushCommitment(
+        bytes32[] memory secrets,
+        bytes32[] memory commitments,
+        uint64 l,
+        address user
+    ) public {
+        vm.assume(
+            secrets.length > l &&
+            commitments.length > l
+        );
+        bytes32[] memory newSecrets = new bytes32[](l);
+        bytes32[] memory newCommitments = new bytes32[](l);
+        for (uint64 i = 0; i < l; ) {
+            newSecrets[i] = secrets[i];
+            for (uint64 j = 0; j < i; ) {
+                // Writing to the same secret overwrites commitments, making the test fail
+                vm.assume(newSecrets[i] != newSecrets[j]);
+                unchecked {
+                    j++;
+                }
+            }
+            newCommitments[i] = commitments[i];
+            unchecked {
+                i++;
+            }
+        }
+        vm.prank(user);
+        authentica.batchPushCommitment(newSecrets, newCommitments);
+        for (uint64 i = 0; i < l; ) {
+            assertEq(newCommitments[i], authentica.checkCommitment(user, newSecrets[i]));
+            unchecked {
+                i++;
+            }
+        }    
+    }   
 }
-
-
- 

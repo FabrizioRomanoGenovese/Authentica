@@ -67,6 +67,10 @@ contract Authentica is Ownable {
         _allowancePerSecret[secret] = allowance;
     }
 
+/// @notice Same secret can show up multiple times 
+/// in the same array, and parameters get overwritten.
+/// As best practice, check your array for repeated
+/// entries before submitting. (doing it on-chain is too gas pricey).
     function _batchPushSecret(
         bytes32[] memory secrets, 
         uint256[] memory ids, 
@@ -104,6 +108,10 @@ contract Authentica is Ownable {
         emit Commitment(_msgSender(), secret, commitment);
     }
 
+/// @notice Same secret can show up multiple times 
+/// in the same array, and parameters get overwritten.
+/// As best practice, check your array for repeated
+/// entries before submitting. (doing it on-chain is too gas pricey).
     function _batchPushCommitment (
         bytes32[] memory secrets,
         bytes32[] memory commitments
@@ -127,7 +135,6 @@ contract Authentica is Ownable {
 /// @notice Warnings in case of missing commitments are useless. If user calls
 ///    this function before committing it will be devoured in the dark forest.
 /// @dev These functions do not deal with the transfer logic, which is up to the user.
-
     function _redeemArtwork (
         bytes32 key,
         uint256 amount
