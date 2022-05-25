@@ -62,20 +62,22 @@ contract Redeem is Authentica, MockERC1155 {
     function redeemArtwork (
         address custodian, 
         bytes32 key,
-        uint256 amount, 
         bytes memory data
     ) public {
-        uint256 id = _redeemArtwork(key, amount);
+        uint256 id;
+        uint256 amount;
+        (id,amount) = _redeemArtwork(key);
         token.safeTransferFrom(custodian, msg.sender, id, amount, data);
     }
 
     function redeemBatchArtwork (
         address custodian,
         bytes32[] memory keys,
-        uint256[] memory amounts,
         bytes memory data
     ) public {
-        uint256[] memory ids = _redeemBatchArtwork(keys, amounts);
+        uint256[] memory ids;
+        uint256[] memory amounts;
+        (ids,amounts) = _redeemBatchArtwork(keys);
         token.safeBatchTransferFrom(custodian, msg.sender, ids, amounts, data);
     }
 }

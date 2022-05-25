@@ -48,17 +48,15 @@ contract MockAuthentica is Authentica {
     //////////////////////////////////////////////////////////////*/
 
     function redeemArtwork (
-        bytes32 key,
-        uint256 amount
-    ) public returns (uint256) {
-       return _redeemArtwork(key, amount);
+        bytes32 key
+    ) public returns (uint256, uint256) {
+       return _redeemArtwork(key);
     }
 
     function redeemBatchArtwork (
-        bytes32[] memory keys,
-        uint256[] memory amounts
-    ) public returns (uint256[] memory) {
-        return _redeemBatchArtwork(keys, amounts);
+        bytes32[] memory keys
+    ) public returns (uint256[] memory, uint256[] memory) {
+        return _redeemBatchArtwork(keys);
    }
 
 }

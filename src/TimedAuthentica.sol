@@ -50,18 +50,16 @@ contract AuthenticaTimed is Authentica {
 /// @dev These functions do not deal with the transfer logic, which is up to the user.
 
     function _redeemArtwork (
-        bytes32 key,
-        uint256 amount
-    ) internal override returns (uint256) {
+        bytes32 key
+    ) internal override returns (uint256, uint256) {
         bytes32 secret = (keccak256(abi.encodePacked(key)));
         require(block.timestamp <= _blockTime[secret], "Secret expired");
-        return super._redeemArtwork(key, amount);
+        return super._redeemArtwork(key);
     }
 
     function _redeemBatchArtwork (
-        bytes32[] memory keys,
-        uint256[] memory amounts
-    ) internal override  returns (uint256[] memory) {
+        bytes32[] memory keys
+    ) internal override  returns (uint256[] memory, uint256[] memory) {
         bytes32 secret;
         for (uint256 i = 0; i < keys.length; ) {
             secret = (keccak256(abi.encodePacked(keys[i])));
@@ -70,7 +68,7 @@ contract AuthenticaTimed is Authentica {
                 i++;
             }
         }
-        return super._redeemBatchArtwork(keys, amounts);
+        return super._redeemBatchArtwork(keys);
     }
 
 }

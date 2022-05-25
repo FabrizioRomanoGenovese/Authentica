@@ -37,6 +37,8 @@ contract Authentica is Ownable {
 
     mapping(bytes32 => uint256 ) private _tokenIds;
     mapping(bytes32 => uint256) private _allowancePerSecret;
+    mapping(bytes32 => bool) private _locked;
+
     mapping(bytes32 => uint256 ) private _blockTime;
     mapping(address => mapping(bytes32 => bytes32)) private _commitments;
 
@@ -57,14 +59,28 @@ contract Authentica is Ownable {
     ) public view returns(uint256) {
         return _allowancePerSecret[secret];
     }
+    
+    function checkLocked(
+        bytes32 secret
+    ) public view returns(bool) {
+        return _locked[secret];
+    }
+
 
     function _pushSecret(
         bytes32 secret,
         uint256 id,
         uint256 allowance
     ) onlyOwner internal virtual {
+    	require(!_locked[secret], "Secret locked, cannot modify.");
         _tokenIds[secret] = id;
         _allowancePerSecret[secret] = allowance;
+    }
+
+    function _lockSecret(
+        bytes32 secret
+    ) onlyOwner internal virtual {
+        _locked[secret] = true;
     }
 
 /// @notice Same secret can show up multiple times
@@ -80,8 +96,18 @@ contract Authentica is Ownable {
         require(secretsLength == ids.length, "Length mismatch.");
         require(secretsLength == allowances.length, "Length mismatch.");
         for (uint256 i = 0; i < secretsLength; ) {
-            _tokenIds[secrets[i]] = ids[i];
-            _allowancePerSecret[secrets[i]] = allowances[i];
+            bytes32 secret = secrets[i];
+            require(!_locked[secret],
+                    string(
+                        abi.encodePacked(
+                            "Secret:",
+                            secrets[i],
+                            " already locked."
+                        )
+                    )
+                    );
+            _tokenIds[secret] = ids[i];
+            _allowancePerSecret[secret] = allowances[i];
             unchecked {
                 i++;
             }
@@ -103,6 +129,7 @@ contract Authentica is Ownable {
         bytes32 secret,
         bytes32 commitment
     ) internal virtual {
+        require(_allowancePerSecret[secret] !=0, "Secret already spent.");
         _commitments[_msgSender()][secret] = commitment;
         _blockTime[secret] = block.timestamp;
         emit Commitment(_msgSender(), secret, commitment);
@@ -119,8 +146,18 @@ contract Authentica is Ownable {
         uint256 secretsLength = secrets.length;
         require(secretsLength == commitments.length, "Length mismatch.");
         for (uint256 i = 0; i < secretsLength; ) {
-            _commitments[_msgSender()][secrets[i]] = commitments[i];
-            _blockTime[secrets[i]] = block.timestamp;
+            bytes32 secret = secrets[i];
+            require(_allowancePerSecret[secret] !=0,
+                    string(
+                        abi.encodePacked(
+                            "Secret:",
+                            secrets[i],
+                            " already spent."
+                        )
+                    )
+            );
+            _commitments[_msgSender()][secret] = commitments[i];
+            _blockTime[secret] = block.timestamp;
             unchecked {
                 i++;
             }
@@ -136,9 +173,8 @@ contract Authentica is Ownable {
 ///    this function before committing it will be devoured in the dark forest.
 /// @dev These functions do not deal with the transfer logic, which is up to the user.
     function _redeemArtwork (
-        bytes32 key,
-        uint256 amount
-    ) internal virtual returns (uint256) {
+        bytes32 key
+    ) internal virtual returns (uint256, uint256) {
         bytes32 secret = (keccak256(abi.encodePacked(key)));
         require(
             keccak256(
@@ -146,19 +182,19 @@ contract Authentica is Ownable {
                     _addressToBytes32(_msgSender())^key
                 )
             ) == _commitments[_msgSender()][secret], "Reveal and commit do not match.");
-        require(amount <= _allowancePerSecret[secret], "Reached allowance limit.");
+        require(_allowancePerSecret[secret] !=0, "Secret already spent.");
         require(_blockTime[secret] + MINIMUM_DELAY <= block.timestamp, "Delay not passed.");
-        _allowancePerSecret[secret] -= amount;
-        return _tokenIds[secret];
+        _locked[secret] = true;
+        _allowancePerSecret[secret] = 0;
+        return (_tokenIds[secret], _allowancePerSecret[secret]);
     }
 
     function _redeemBatchArtwork (
-        bytes32[] memory keys,
-        uint256[] memory amounts
-    ) internal virtual returns (uint256[] memory) {
+        bytes32[] memory keys
+    ) internal virtual returns (uint256[] memory, uint256[] memory) {
         uint256 keysLength = keys.length;
-        require(keysLength == amounts.length, "Length mismatch.");
         uint256[] memory ids;
+        uint256[] memory amounts;
         for (uint256 i = 0; i < keysLength; ) {
             bytes32 secret = (keccak256(abi.encodePacked(keys[i])));
             require(
@@ -167,15 +203,17 @@ contract Authentica is Ownable {
                         _addressToBytes32(_msgSender())^keys[i]
                     )
                 ) == _commitments[_msgSender()][secret], "Reveal and commit do not match.");
-            require(amounts[i] <= _allowancePerSecret[secret], "Reached allowance limit.");
+            require(_allowancePerSecret[secret] !=0, "Secret already spent.");
             require(_blockTime[secret] + MINIMUM_DELAY <= block.timestamp, "Delay not passed.");
-            _allowancePerSecret[secret] -= amounts[i];
+            _locked[secret] = true;
+            _allowancePerSecret[secret] = 0;
             ids[i] = _tokenIds[secret];
+            amounts[i] = _allowancePerSecret[secret];
             unchecked {
                 i++;
             }
         }
-        return ids;
+        return (ids,amounts);
     }
 
     /*///////////////////////////////////////////////////////////////
