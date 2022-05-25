@@ -93,19 +93,12 @@ contract Authentica {
         uint256[] memory allowances
     ) internal virtual {
         uint256 secretsLength = secrets.length;
+        require(secretsLength > 0, "Empty array.");
         require(secretsLength == ids.length, "Length mismatch.");
         require(secretsLength == allowances.length, "Length mismatch.");
         for (uint256 i = 0; i < secretsLength; ) {
             bytes32 secret = secrets[i];
-            require(!_locked[secret],
-                    string(
-                        abi.encodePacked(
-                            "Secret:",
-                            secrets[i],
-                            " already locked."
-                        )
-                    )
-                    );
+            require(!_locked[secret], "Some secrets are already locked, cannot modify.");
             _tokenIds[secret] = ids[i];
             _allowancePerSecret[secret] = allowances[i];
             unchecked {
@@ -118,6 +111,7 @@ contract Authentica {
         bytes32[] memory secrets
     ) internal virtual {
         uint256 secretsLength = secrets.length;
+        require(secretsLength > 0, "Empty array.");
         for (uint256 i = 0; i < secretsLength; ) {
             _locked[secrets[i]] = true;
             unchecked {
@@ -156,18 +150,11 @@ contract Authentica {
         bytes32[] memory commitments
     ) internal virtual {
         uint256 secretsLength = secrets.length;
+        require(secretsLength > 0, "Empty array.");
         require(secretsLength == commitments.length, "Length mismatch.");
         for (uint256 i = 0; i < secretsLength; ) {
             bytes32 secret = secrets[i];
-            require(_allowancePerSecret[secret] !=0,
-                    string(
-                        abi.encodePacked(
-                            "Secret:",
-                            secrets[i],
-                            " already spent."
-                        )
-                    )
-            );
+            require(_allowancePerSecret[secret] !=0, "Some secrets are already spent.");
             _commitments[msg.sender][secret] = commitments[i];
             _blockTime[secret] = block.timestamp;
             unchecked {
@@ -215,7 +202,7 @@ contract Authentica {
                         _addressToBytes32(msg.sender)^keys[i]
                     )
                 ) == _commitments[msg.sender][secret], "Reveal and commit do not match.");
-            require(_allowancePerSecret[secret] !=0, "Secret already spent.");
+            require(_allowancePerSecret[secret] !=0, "Some secrets are already spent.");
             require(_blockTime[secret] + MINIMUM_DELAY <= block.timestamp, "Delay not passed.");
             _locked[secret] = true;
             _allowancePerSecret[secret] = 0;
