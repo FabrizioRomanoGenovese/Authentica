@@ -1,8 +1,7 @@
 pragma solidity 0.8.13;
 
-import "openzeppelin-contracts/contracts/access/Ownable.sol";
 
-contract Authentica is Ownable {
+contract Authentica {
 
     /*///////////////////////////////////////////////////////////////
                                 EVENTS
@@ -48,6 +47,8 @@ contract Authentica is Ownable {
                               SECRET LOGIC
     //////////////////////////////////////////////////////////////*/
 
+/// @notice These functions should be protected by some form of ownership.
+
     function checkId(
         bytes32 secret
     ) public view returns(uint256) {
@@ -66,12 +67,11 @@ contract Authentica is Ownable {
         return _locked[secret];
     }
 
-
     function _pushSecret(
         bytes32 secret,
         uint256 id,
         uint256 allowance
-    ) onlyOwner internal virtual {
+    ) internal virtual {
     	require(!_locked[secret], "Secret locked, cannot modify.");
         _tokenIds[secret] = id;
         _allowancePerSecret[secret] = allowance;
@@ -79,7 +79,7 @@ contract Authentica is Ownable {
 
     function _lockSecret(
         bytes32 secret
-    ) onlyOwner internal virtual {
+    ) internal virtual {
         _locked[secret] = true;
     }
 
@@ -91,7 +91,7 @@ contract Authentica is Ownable {
         bytes32[] memory secrets,
         uint256[] memory ids,
         uint256[] memory allowances
-    ) onlyOwner internal virtual {
+    ) internal virtual {
         uint256 secretsLength = secrets.length;
         require(secretsLength == ids.length, "Length mismatch.");
         require(secretsLength == allowances.length, "Length mismatch.");
@@ -114,6 +114,15 @@ contract Authentica is Ownable {
         }
     }
 
+    function _batchLockSecret(
+        bytes32[] memory secrets
+    ) internal virtual {
+        uint256 secretsLength = secrets.length;
+        for (uint256 i = 0; i < secretsLength; ) {
+            _locked[secrets[i]] = true;
+        }
+    }
+
     /*///////////////////////////////////////////////////////////////
                               COMMITMENT LOGIC
     //////////////////////////////////////////////////////////////*/
@@ -130,9 +139,9 @@ contract Authentica is Ownable {
         bytes32 commitment
     ) internal virtual {
         require(_allowancePerSecret[secret] !=0, "Secret already spent.");
-        _commitments[_msgSender()][secret] = commitment;
+        _commitments[msg.sender][secret] = commitment;
         _blockTime[secret] = block.timestamp;
-        emit Commitment(_msgSender(), secret, commitment);
+        emit Commitment(msg.sender, secret, commitment);
     }
 
 /// @notice Same secret can show up multiple times
@@ -156,13 +165,13 @@ contract Authentica is Ownable {
                         )
                     )
             );
-            _commitments[_msgSender()][secret] = commitments[i];
+            _commitments[msg.sender][secret] = commitments[i];
             _blockTime[secret] = block.timestamp;
             unchecked {
                 i++;
             }
         }
-        emit BatchCommitment(_msgSender(), secrets, commitments);
+        emit BatchCommitment(msg.sender, secrets, commitments);
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -179,9 +188,9 @@ contract Authentica is Ownable {
         require(
             keccak256(
                 abi.encodePacked(
-                    _addressToBytes32(_msgSender())^key
+                    _addressToBytes32(msg.sender)^key
                 )
-            ) == _commitments[_msgSender()][secret], "Reveal and commit do not match.");
+            ) == _commitments[msg.sender][secret], "Reveal and commit do not match.");
         require(_allowancePerSecret[secret] !=0, "Secret already spent.");
         require(_blockTime[secret] + MINIMUM_DELAY <= block.timestamp, "Delay not passed.");
         _locked[secret] = true;
@@ -200,9 +209,9 @@ contract Authentica is Ownable {
             require(
                 keccak256(
                     abi.encodePacked(
-                        _addressToBytes32(_msgSender())^keys[i]
+                        _addressToBytes32(msg.sender)^keys[i]
                     )
-                ) == _commitments[_msgSender()][secret], "Reveal and commit do not match.");
+                ) == _commitments[msg.sender][secret], "Reveal and commit do not match.");
             require(_allowancePerSecret[secret] !=0, "Secret already spent.");
             require(_blockTime[secret] + MINIMUM_DELAY <= block.timestamp, "Delay not passed.");
             _locked[secret] = true;

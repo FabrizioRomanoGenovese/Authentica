@@ -2,8 +2,9 @@
 pragma solidity 0.8.13;
 
 import "../../../src/Authentica.sol";
+import "openzeppelin-contracts/contracts/access/Ownable.sol";
 
-contract MockAuthentica is Authentica {
+contract MockAuthentica is Authentica, Ownable {
 
     /*///////////////////////////////////////////////////////////////
                               SECRET LOGIC
@@ -13,16 +14,28 @@ contract MockAuthentica is Authentica {
         bytes32 secret,
         uint256 id,
         uint256 allowance
-    ) public {
+    ) onlyOwner public {
         _pushSecret(secret, id, allowance);
+    }
+
+    function lockSecret(
+        bytes32 secret
+    ) onlyOwner public {
+        _lockSecret(secret);
     }
 
     function batchPushSecret(
         bytes32[] memory secrets,
         uint256[] memory ids,
         uint256[] memory allowances
-    ) public {
+    ) onlyOwner public {
         _batchPushSecret(secrets, ids, allowances);
+    }
+
+    function batchLockSecret(
+        bytes32[] memory secrets
+    ) onlyOwner public {
+        _batchLockSecret(secrets);
     }
 
     /*///////////////////////////////////////////////////////////////

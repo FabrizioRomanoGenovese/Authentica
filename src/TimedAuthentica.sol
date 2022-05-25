@@ -19,7 +19,7 @@ contract AuthenticaTimed is Authentica {
         uint256 id,
         uint256 allowance,
         uint256 blockTime
-    ) onlyOwner internal {
+    ) internal {
         _pushSecret(secret, id, allowance);
         _blockTime[secret] = blockTime;
     }
@@ -29,7 +29,7 @@ contract AuthenticaTimed is Authentica {
         uint256[] memory ids, 
         uint256[] memory allowances,
         uint256[] memory blockTimes
-    ) onlyOwner internal {
+    ) internal {
         _batchPushSecret(secrets, ids, allowances);
         uint256 secretsLength = secrets.length; 
         require(secretsLength == blockTimes.length, "Length mismatch.");

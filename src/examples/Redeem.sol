@@ -2,13 +2,15 @@ pragma solidity 0.8.13;
 
 //import "solmate/tokens/ERC1155.sol";
 import {MockERC1155} from "solmate/test/utils/mocks/MockERC1155.sol";
+import "openzeppelin-contracts/contracts/access/Ownable.sol";
+
 import "../Authentica.sol";
 
 /// @notice This contract must be deployed after the NFT contract.
 /// @notice Artist should set up a specific custodian wallet.
 /// @notice This contract should be set isApprovedForAll with respect to custodian.
 
-contract Redeem is Authentica, MockERC1155 {
+contract Redeem is Authentica, MockERC1155, Ownable {
 
     MockERC1155 token;
 
@@ -24,16 +26,29 @@ contract Redeem is Authentica, MockERC1155 {
         bytes32 secret, 
         uint256 id, 
         uint256 allowance
-    ) public {
+    ) onlyOwner public {
         _pushSecret(secret, id, allowance);
     }
+
+    function lockSecret(
+        bytes32 secret
+    ) onlyOwner public {
+        _lockSecret(secret);
+    }
+
 
     function batchPushSecret(
         bytes32[] memory secrets, 
         uint256[] memory ids, 
         uint256[] memory allowances
-    ) public {
+    ) onlyOwner public {
         _batchPushSecret(secrets, ids, allowances);
+    }
+
+    function batchLockSecret(
+        bytes32[] memory secrets
+    ) onlyOwner public {
+        _batchLockSecret(secrets);
     }
 
     /*///////////////////////////////////////////////////////////////
