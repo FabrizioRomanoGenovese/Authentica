@@ -416,7 +416,6 @@ contract AuthenticaTest is MockAuthentica, Test {
         assertEq(commitments2[1], authentica.checkCommitment(address(0xBEEF), secrets[1]));
     }
 
-
     /*///////////////////////////////////////////////////////////////
                               REVEAL LOGIC
     //////////////////////////////////////////////////////////////*/
