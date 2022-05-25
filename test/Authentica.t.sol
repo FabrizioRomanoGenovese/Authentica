@@ -21,12 +21,31 @@ contract AuthenticaTest is MockAuthentica, Test {
                               SECRET LOGIC
     //////////////////////////////////////////////////////////////*/
 
+    function testSecretBasicSanity(
+        bytes32 secret,
+        address user
+    ) public {
+        vm.prank(user);
+        uint256 resultId = authentica.checkId(secret);
+        uint256 resultAllowance = authentica.checkAllowance(secret);
+        bool resultLocked = authentica.checkLocked(secret);
+        assertEq(resultId, 0);
+        assertEq(resultAllowance, 0);
+        assertEq(resultLocked, false);
+    }
+
     function testPushSecretOwner(
         bytes32 secret,
         uint256 id,
         uint256 allowance
     ) public {
         authentica.pushSecret(secret, id, allowance);
+        uint256 resultId = authentica.checkId(secret);
+        uint256 resultAllowance = authentica.checkAllowance(secret);
+        bool resultLocked = authentica.checkLocked(secret);
+        assertEq(resultId, id);
+        assertEq(resultAllowance, allowance);
+        assertEq(resultLocked, false);
     }
 
     function testPushSecretUser(
@@ -39,22 +58,6 @@ contract AuthenticaTest is MockAuthentica, Test {
         vm.assume(user != address(this));
         vm.prank(user);
         authentica.pushSecret(secret, id, allowance);
-    }
-
-    function testBatchPushSecretOwner() public {
-        bytes32[] memory secrets = new bytes32[](3);
-            secrets[0] = "hello";
-            secrets[1] = "world";
-            secrets[2] = "everyone";
-        uint256[] memory ids = new uint256[](3);
-            ids[0] = 4;
-            ids[1] = 345989;
-            ids[2] = 84795;
-        uint256[] memory allowances = new uint256[](3);
-            allowances[0] = 47582;
-            allowances[1] = 3928;
-            allowances[2] = 274;
-        authentica.batchPushSecret(secrets, ids, allowances);
     }
 
     function testBatchPushSecretOwner(
@@ -73,26 +76,29 @@ contract AuthenticaTest is MockAuthentica, Test {
             newSecrets[i] = secrets[i];
             newIds[i] = ids[i];
             newAllowances[i] = allowances[i];
+            for (uint64 j = 0; j < i; ) {
+                // Writing to the same secret overwrites the rest, making it fail
+                vm.assume(newSecrets[i] != newSecrets[j]);
+                unchecked {
+                    j++;
+                }
+            }
             unchecked {
                 i++;
             }
         }
         authentica.batchPushSecret(newSecrets, newIds, newAllowances);
-    }
-
-    function testBatchPushSecretUser() public {
-        vm.expectRevert('Ownable: caller is not the owner');
-        vm.prank(address(0xBEEF));
-        bytes32[] memory secrets = new bytes32[](2);
-            secrets[0] = "hello";
-            secrets[1] = "world";
-        uint256[] memory ids = new uint256[](2);
-            ids[0] = 4;
-            ids[1] = 345989;
-        uint256[] memory allowances = new uint256[](2);
-            allowances[0] = 47582;
-            allowances[1] = 3928;
-        authentica.batchPushSecret(secrets, ids, allowances);
+        for (uint64 k = 0; k < l; ) {
+            uint256 resultId = authentica.checkId(newSecrets[k]);
+            uint256 resultAllowance = authentica.checkAllowance(newSecrets[k]);
+            bool resultLocked = authentica.checkLocked(newSecrets[k]);
+            assertEq(resultId, newIds[k]);
+            assertEq(resultAllowance, newAllowances[k]);
+            assertEq(resultLocked, false);
+            unchecked {
+                k++;
+            }
+        }
     }
 
     function testBatchPushSecretUser(
@@ -124,20 +130,81 @@ contract AuthenticaTest is MockAuthentica, Test {
         authentica.batchPushSecret(newSecrets, newIds, newAllowances);
     }
 
-    function testBatchPushSecretMismatch() public {
-        vm.expectRevert('Length mismatch.');
-        bytes32[] memory secrets = new bytes32[](2);
-            secrets[0] = "hello";
-            secrets[1] = "world";
-        uint256[] memory ids = new uint256[](3);
-            ids[0] = 4;
-            ids[1] = 345989;
-            ids[2] = 84795;
-        uint256[] memory allowances = new uint256[](3);
-            allowances[0] = 47582;
-            allowances[1] = 3928;
-            allowances[2] = 274;
-        authentica.batchPushSecret(secrets, ids, allowances);
+    function testLockSecretOwner(
+        bytes32 secret
+    ) public {
+        authentica.lockSecret(secret);
+        bool resultLocked = authentica.checkLocked(secret);
+        assertEq(resultLocked, true);
+    }
+
+    function testLockSecretUser(
+        bytes32 secret,
+        address user
+    ) public {
+        vm.expectRevert('Ownable: caller is not the owner');
+        vm.assume(user != address(this));
+        vm.prank(user);
+        authentica.lockSecret(secret);
+    }
+
+    function testBatchLockSecretOwner(
+        bytes32[] memory secrets,
+        uint256[] memory ids,
+        uint256[] memory allowances,
+        uint64 l
+    ) public {
+        vm.assume(secrets.length > l);
+        vm.assume(ids.length > l);
+        vm.assume(allowances.length > l);
+        bytes32[] memory newSecrets = new bytes32[](l);
+        uint256[] memory newIds = new uint256[](l);
+        uint256[] memory newAllowances = new uint256[](l);
+        for (uint64 i = 0; i < l; ) {
+            newSecrets[i] = secrets[i];
+            newIds[i] = ids[i];
+            newAllowances[i] = allowances[i];
+            unchecked {
+                i++;
+            }
+        }
+        authentica.batchPushSecret(newSecrets, newIds, newAllowances);
+        authentica.batchLockSecret(newSecrets);
+        for (uint64 i = 0; i < l; ) {
+            bool resultLocked = authentica.checkLocked(newSecrets[i]);
+            assertEq(resultLocked, true);
+            unchecked {
+                i++;
+            }
+        }
+    }
+
+    function testBatchLockSecretUser(
+        bytes32[] memory secrets,
+        uint256[] memory ids,
+        uint256[] memory allowances,
+        uint64 l,
+        address user
+    ) public {
+        vm.assume(user != address(this));
+        vm.assume(secrets.length > l);
+        vm.assume(ids.length > l);
+        vm.assume(allowances.length > l);
+        bytes32[] memory newSecrets = new bytes32[](l);
+        uint256[] memory newIds = new uint256[](l);
+        uint256[] memory newAllowances = new uint256[](l);
+        for (uint64 i = 0; i < l; ) {
+            newSecrets[i] = secrets[i];
+            newIds[i] = ids[i];
+            newAllowances[i] = allowances[i];
+            unchecked {
+                i++;
+            }
+        }
+        authentica.batchPushSecret(newSecrets, newIds, newAllowances);
+        vm.prank(user);
+        vm.expectRevert('Ownable: caller is not the owner');
+        authentica.batchLockSecret(newSecrets);
     }
 
     function testBatchPushSecretMismatch(
@@ -154,13 +221,6 @@ contract AuthenticaTest is MockAuthentica, Test {
         authentica.batchPushSecret(secrets, ids, allowances);
     }
 
-    function testPushAndCheck() public {
-        authentica.pushSecret("secret", 666, 42);
-        vm.prank(address(0xBEEF));
-        uint256 result = authentica.checkId("secret");
-        assertEq(result, 666);
-    }
-
     function testPushAndCheck(
         bytes32 secret,
         uint256 id,
@@ -169,19 +229,100 @@ contract AuthenticaTest is MockAuthentica, Test {
     ) public {
         authentica.pushSecret(secret, id, allowance);
         vm.prank(user);
-        uint256 result = authentica.checkId(secret);
-        assertEq(result, id);
+        uint256 resultId = authentica.checkId(secret);
+        uint256 resultAllowance = authentica.checkAllowance(secret);
+        bool resultLocked = authentica.checkLocked(secret);
+        assertEq(resultId, id);
+        assertEq(resultAllowance, allowance);
+        assertEq(resultLocked, false);
+    }
+
+    function testPushLockAndCheck(
+        bytes32 secret,
+        uint256 id,
+        uint256 allowance,
+        address user
+    ) public {
+        authentica.pushSecret(secret, id, allowance);
+        authentica.lockSecret(secret);
+        vm.prank(user);
+        uint256 resultId = authentica.checkId(secret);
+        uint256 resultAllowance = authentica.checkAllowance(secret);
+        bool resultLocked = authentica.checkLocked(secret);
+        assertEq(resultId, id);
+        assertEq(resultAllowance, allowance);
+        assertEq(resultLocked, true);
+    }
+
+    function testLockPush(
+        bytes32 secret,
+        uint256 id,
+        uint256 allowance
+    ) public {
+        authentica.lockSecret(secret);
+        vm.expectRevert('Secret locked, cannot modify.');
+        authentica.pushSecret(secret, id, allowance);
+    }
+
+    function testLockLock(
+        bytes32 secret
+    ) public {
+        authentica.lockSecret(secret);
+        authentica.lockSecret(secret);
+        assertEq(authentica.checkLocked(secret), true);
+    }
+
+    function testBatchLockPush(
+        bytes32[] memory secrets,
+        uint256[] memory ids,
+        uint256[] memory allowances,
+        uint256 l,
+        uint256 k
+    ) public {
+        vm.assume(secrets.length > l);
+        vm.assume(ids.length > l);
+        vm.assume(allowances.length > l);
+        vm.assume(l > k);
+        bytes32[] memory newSecrets = new bytes32[](l);
+        uint256[] memory newIds = new uint256[](l);
+        uint256[] memory newAllowances = new uint256[](l);
+        for (uint64 i = 0; i < l; ) {
+            newSecrets[i] = secrets[i];
+            newIds[i] = ids[i];
+            newAllowances[i] = allowances[i];
+            unchecked {
+                i++;
+            }
+        }
+        authentica.batchLockSecret(newSecrets);
+        vm.expectRevert('Secret locked, cannot modify.');
+        authentica.pushSecret(newSecrets[k], newIds[k], newAllowances[k]);
+    }
+
+    function testBatchLockLock(
+        bytes32[] memory secrets
+    ) public {
+        authentica.batchLockSecret(secrets);
+        authentica.batchLockSecret(secrets);
+        for (uint64 i = 0; i < secrets.length; ) {
+            assertEq(authentica.checkLocked(secrets[i]), true);
+            unchecked {
+                i++;
+            }
+        }
     }
 
     /*///////////////////////////////////////////////////////////////
                               COMMITMENT LOGIC
     //////////////////////////////////////////////////////////////*/
 
-    function testPushCommitment() public {
-        authentica.pushSecret("secret", 42, 666);
-        vm.prank(address(0xBEEF));
-        authentica.pushCommitment("secret", "commitment");
-        assertEq("commitment", authentica.checkCommitment(address(0xBEEF), "secret"));
+    function testCommitmentBasicSanity(
+        bytes32 secret,
+        address user
+    ) public {
+        vm.prank(user);
+        bytes32 resultId = authentica.checkCommitment(user, secret);
+        assertEq(resultId, "");
     }
 
     function testPushCommitment(

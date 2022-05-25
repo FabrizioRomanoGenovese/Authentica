@@ -120,6 +120,9 @@ contract Authentica {
         uint256 secretsLength = secrets.length;
         for (uint256 i = 0; i < secretsLength; ) {
             _locked[secrets[i]] = true;
+            unchecked {
+                i++;
+            }
         }
     }
 
