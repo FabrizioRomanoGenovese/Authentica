@@ -72,6 +72,7 @@ contract Authentica {
         uint256 id,
         uint256 allowance
     ) internal virtual {
+    	require(id != 0, "Id0 is reserved for uninitialized secrets.");
     	require(!_locked[secret], "Secret locked, cannot modify.");
         _tokenIds[secret] = id;
         _allowancePerSecret[secret] = allowance;
@@ -80,6 +81,7 @@ contract Authentica {
     function _lockSecret(
         bytes32 secret
     ) internal virtual {
+	require(_tokenIds[secret] != 0, "You are trying to lock an uninitialized secret.");
         _locked[secret] = true;
     }
 
@@ -98,6 +100,7 @@ contract Authentica {
         require(secretsLength == allowances.length, "Length mismatch.");
         for (uint256 i = 0; i < secretsLength; ) {
             bytes32 secret = secrets[i];
+            require(ids[i] != 0, "Id0 is reserved for uninitialized secrets.");
             require(!_locked[secret], "Some secrets are already locked, cannot modify.");
             _tokenIds[secret] = ids[i];
             _allowancePerSecret[secret] = allowances[i];
@@ -113,6 +116,7 @@ contract Authentica {
         uint256 secretsLength = secrets.length;
         require(secretsLength > 0, "Empty array.");
         for (uint256 i = 0; i < secretsLength; ) {
+            require(_tokenIds[secrets[i]] != 0, "You are trying to lock an uninitialized secret.");
             _locked[secrets[i]] = true;
             unchecked {
                 i++;
