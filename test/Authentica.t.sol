@@ -58,7 +58,6 @@ contract AuthenticaTest is MockAuthentica, Test {
     ) public {
         vm.expectRevert('Ownable: caller is not the owner');
         vm.assume(id != 0);
-        vm.assume(allowance != 0);
         vm.assume(user != address(this));
         vm.prank(user);
         authentica.pushSecret(secret, id, allowance);
@@ -81,7 +80,6 @@ contract AuthenticaTest is MockAuthentica, Test {
         uint256[] memory newAllowances = new uint256[](l);
         for (uint64 i = 0; i < l; ) {
             vm.assume(ids[i] != 0);
-            vm.assume(allowances[i] != 0);
             newSecrets[i] = secrets[i];
             newIds[i] = ids[i];
             newAllowances[i] = allowances[i];
@@ -140,10 +138,20 @@ contract AuthenticaTest is MockAuthentica, Test {
         authentica.batchPushSecret(newSecrets, newIds, newAllowances);
     }
 
-    function testLockSecretOwner(
+    function testLockSecretUninitialized(
         bytes32 secret
     ) public {
         vm.expectRevert('You are trying to lock an uninitialized secret.');
+        authentica.lockSecret(secret);
+    }
+
+    function testLockSecretSpent(
+        bytes32 secret,
+        uint256 id
+    ) public {
+        vm.assume(id != 0);
+        authentica.pushSecret(secret, id, 0);
+        vm.expectRevert('You are trying to lock an already spent secret.');
         authentica.lockSecret(secret);
     }
 
@@ -160,7 +168,6 @@ contract AuthenticaTest is MockAuthentica, Test {
         assertEq(resultLocked, true);
     }
 
-
     function testLockSecretUser(
         bytes32 secret,
         address user
@@ -169,6 +176,45 @@ contract AuthenticaTest is MockAuthentica, Test {
         vm.assume(user != address(this));
         vm.prank(user);
         authentica.lockSecret(secret);
+    }
+
+    function testBatchLockSecretUninitialized(
+        bytes32[] memory secrets
+    ) public {
+        vm.expectRevert('Some secrets are uninitialized, cannot lock.');
+        authentica.batchLockSecret(secrets);
+    }
+
+    function testBatchLockSecretSpent(
+        bytes32[] memory secrets,
+        uint256[] memory ids,
+        uint256[] memory allowances,
+        uint64 l,
+        uint64 k
+    ) public {
+        vm.assume(
+            secrets.length > l &&
+            ids.length > l &&
+            allowances.length > l&& 
+            l > 0 &&
+            l > k
+        );
+        bytes32[] memory newSecrets = new bytes32[](l);
+        uint256[] memory newIds = new uint256[](l);
+        uint256[] memory newAllowances = new uint256[](l);
+        for (uint64 i = 0; i < l; ) {
+            vm.assume(ids[i] != 0);
+            newSecrets[i] = secrets[i];
+            newIds[i] = ids[i];
+            newAllowances[i] = allowances[i];
+            unchecked {
+                i++;
+            }
+        }
+        newAllowances[k] = 0;
+        authentica.batchPushSecret(newSecrets, newIds, newAllowances);
+        vm.expectRevert('Some secrets are already spent, cannot lock.');
+        authentica.batchLockSecret(newSecrets);
     }
 
     function testBatchLockSecretOwner(
@@ -262,7 +308,6 @@ contract AuthenticaTest is MockAuthentica, Test {
         address user
     ) public {
         vm.assume(id != 0);
-        vm.assume(allowance != 0);
         authentica.pushSecret(secret, id, allowance);
         vm.prank(user);
         uint256 resultId = authentica.checkId(secret);
