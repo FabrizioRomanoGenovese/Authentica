@@ -40,6 +40,7 @@ contract AuthenticaTest is MockAuthentica, Test {
         uint256 allowance
     ) public {
         vm.assume(id != 0);
+        vm.assume(allowance != 0);
         authentica.pushSecret(secret, id, allowance);
         uint256 resultId = authentica.checkId(secret);
         uint256 resultAllowance = authentica.checkAllowance(secret);
@@ -57,6 +58,7 @@ contract AuthenticaTest is MockAuthentica, Test {
     ) public {
         vm.expectRevert('Ownable: caller is not the owner');
         vm.assume(id != 0);
+        vm.assume(allowance != 0);
         vm.assume(user != address(this));
         vm.prank(user);
         authentica.pushSecret(secret, id, allowance);
@@ -73,15 +75,16 @@ contract AuthenticaTest is MockAuthentica, Test {
             ids.length > l &&
             allowances.length > l&& 
             l > 0
-        );
+        );        
         bytes32[] memory newSecrets = new bytes32[](l);
         uint256[] memory newIds = new uint256[](l);
         uint256[] memory newAllowances = new uint256[](l);
         for (uint64 i = 0; i < l; ) {
+            vm.assume(ids[i] != 0);
+            vm.assume(allowances[i] != 0);
             newSecrets[i] = secrets[i];
             newIds[i] = ids[i];
             newAllowances[i] = allowances[i];
-            vm.assume(newIds[i] != 0);
             for (uint64 j = 0; j < i; ) {
                 // Writing to the same secret overwrites the rest, making it fail
                 vm.assume(newSecrets[i] != newSecrets[j]);
@@ -150,6 +153,7 @@ contract AuthenticaTest is MockAuthentica, Test {
         uint256 allowance
     ) public {
         vm.assume(id != 0);
+        vm.assume(allowance != 0);
         authentica.pushSecret(secret, id, allowance);
         authentica.lockSecret(secret);
         bool resultLocked = authentica.checkLocked(secret);
@@ -184,6 +188,7 @@ contract AuthenticaTest is MockAuthentica, Test {
         uint256[] memory newAllowances = new uint256[](l);
         for (uint64 i = 0; i < l; ) {
             vm.assume(ids[i] != 0);
+            vm.assume(allowances[i] != 0);
             newSecrets[i] = secrets[i];
             newIds[i] = ids[i];
             newAllowances[i] = allowances[i];
@@ -221,6 +226,7 @@ contract AuthenticaTest is MockAuthentica, Test {
         uint256[] memory newAllowances = new uint256[](l);
         for (uint64 i = 0; i < l; ) {
             vm.assume(ids[i] != 0);
+            vm.assume(allowances[i] != 0);
             newSecrets[i] = secrets[i];
             newIds[i] = ids[i];
             newAllowances[i] = allowances[i];
@@ -256,6 +262,7 @@ contract AuthenticaTest is MockAuthentica, Test {
         address user
     ) public {
         vm.assume(id != 0);
+        vm.assume(allowance != 0);
         authentica.pushSecret(secret, id, allowance);
         vm.prank(user);
         uint256 resultId = authentica.checkId(secret);
@@ -273,6 +280,7 @@ contract AuthenticaTest is MockAuthentica, Test {
         address user
     ) public {
         vm.assume(id != 0);
+        vm.assume(allowance != 0);
         authentica.pushSecret(secret, id, allowance);
         authentica.lockSecret(secret);
         vm.prank(user);
@@ -290,6 +298,7 @@ contract AuthenticaTest is MockAuthentica, Test {
         uint256 allowance
     ) public {
         vm.assume(id != 0);
+        vm.assume(allowance != 0);
         authentica.pushSecret(secret, id, allowance);
         authentica.lockSecret(secret);
         vm.expectRevert('Secret locked, cannot modify.');
@@ -302,6 +311,7 @@ contract AuthenticaTest is MockAuthentica, Test {
         uint256 allowance
     ) public {
         vm.assume(id != 0);
+        vm.assume(allowance != 0);
         authentica.pushSecret(secret, id, allowance);
         authentica.lockSecret(secret);
         authentica.lockSecret(secret);
@@ -327,6 +337,7 @@ contract AuthenticaTest is MockAuthentica, Test {
         uint256[] memory newAllowances = new uint256[](l);
         for (uint64 i = 0; i < l; ) {
             vm.assume(ids[i] != 0);
+            vm.assume(allowances[i] != 0);
             newSecrets[i] = secrets[i];
             newIds[i] = ids[i];
             newAllowances[i] = allowances[i];
@@ -359,6 +370,7 @@ contract AuthenticaTest is MockAuthentica, Test {
         uint256[] memory newAllowances = new uint256[](l);
         for (uint64 i = 0; i < l; ) {
             vm.assume(ids[i] != 0);
+            vm.assume(allowances[i] != 0);
             newSecrets[i] = secrets[i];
             newIds[i] = ids[i];
             newAllowances[i] = allowances[i];
