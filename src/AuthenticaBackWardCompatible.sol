@@ -72,7 +72,6 @@ contract Authentica {
         uint256 id,
         uint256 allowance
     ) internal virtual {
-    	require(id != 0, "TokenId0 is reserved for uninitialized secrets.");
         require(allowance != 0, "Cannot initialize with 0 allowance.");
     	require(!_locked[secret], "Secret locked, cannot modify.");
         _tokenIds[secret] = id;
@@ -82,7 +81,6 @@ contract Authentica {
     function _lockSecret(
         bytes32 secret
     ) internal virtual {
-	require(_tokenIds[secret] != 0, "You are trying to lock an uninitialized secret.");
 	require(_allowancePerSecret[secret] != 0, "You are trying to lock an already spent secret.");
         _locked[secret] = true;
     }
@@ -102,7 +100,6 @@ contract Authentica {
         require(secretsLength == allowances.length, "Length mismatch.");
         for (uint256 i = 0; i < secretsLength; ) {
             bytes32 secret = secrets[i];
-            require(ids[i] != 0, "Some secrets are being initialized to tokenId0, that is reserved for uninitialized secrets.");
             require(allowances[i] != 0, "Some secrets are being initialized with 0 allowance.");
             require(!_locked[secret], "Some secrets are already locked, cannot modify.");
             _tokenIds[secret] = ids[i];
@@ -119,7 +116,6 @@ contract Authentica {
         uint256 secretsLength = secrets.length;
         require(secretsLength > 0, "Empty array.");
         for (uint256 i = 0; i < secretsLength; ) {
-            require(_tokenIds[secrets[i]] != 0, "Some secrets are uninitialized, cannot lock.");
             require(_allowancePerSecret[secrets[i]] != 0, "Some secrets are already spent, cannot lock.");
             _locked[secrets[i]] = true;
             unchecked {
@@ -143,7 +139,6 @@ contract Authentica {
         bytes32 secret,
         bytes32 commitment
     ) internal virtual {
-        require(_tokenIds[secret] !=0, "Secret uninitialized.");
         require(_allowancePerSecret[secret] !=0, "Secret already spent.");
         _commitments[msg.sender][secret] = commitment;
         _blockTime[secret] = block.timestamp;
@@ -163,7 +158,6 @@ contract Authentica {
         require(secretsLength == commitments.length, "Length mismatch.");
         for (uint256 i = 0; i < secretsLength; ) {
             bytes32 secret = secrets[i];
-            require(_tokenIds[secret] !=0, "Some secrets are uninitialized.");
             require(_allowancePerSecret[secret] !=0, "Some secrets are already spent.");
             _commitments[msg.sender][secret] = commitments[i];
             _blockTime[secret] = block.timestamp;

@@ -417,13 +417,13 @@ contract AuthenticaTest is MockAuthentica, Test {
         assertEq(commitment, authentica.checkCommitment(address(user), secret));
     }
 
-    function testPushCommitmentSpent(
+    function testPushCommitmentUninitialized(
         bytes32 secret,
         bytes32 commitment,
         address user
     ) public {
         vm.prank(user);
-        vm.expectRevert('Secret already spent.');
+        vm.expectRevert('Secret uninitialized.');
         authentica.pushCommitment(secret, commitment);
     }
 
@@ -520,7 +520,7 @@ contract AuthenticaTest is MockAuthentica, Test {
             commitments.length > l && 
             l > 0
         );
-        vm.expectRevert("Some secrets are already spent.");
+        vm.expectRevert("Some secrets are uninitialized.");
         bytes32[] memory newSecrets = new bytes32[](l);
         bytes32[] memory newCommitments = new bytes32[](l);
         for (uint64 i = 0; i < l; ) {
