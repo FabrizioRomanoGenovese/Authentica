@@ -76,7 +76,6 @@ contract AuthenticaTest is MockAuthentica, Test {
         uint256[] memory newIds = new uint256[](l);
         uint256[] memory newAllowances = new uint256[](l);
         for (uint64 i = 0; i < l; ) {
-            vm.assume(ids[i] != 0);
             newSecrets[i] = secrets[i];
             newIds[i] = ids[i];
             newAllowances[i] = allowances[i];
@@ -91,6 +90,7 @@ contract AuthenticaTest is MockAuthentica, Test {
                 i++;
             }
         }
+
         authentica.batchPushSecret(newSecrets, newIds, newAllowances);
         for (uint64 k = 0; k < l; ) {
             uint256 resultId = authentica.checkId(newSecrets[k]);
