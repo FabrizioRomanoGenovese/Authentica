@@ -138,9 +138,8 @@ contract AuthenticaTest is MockAuthentica, Test {
     function testLockSecretUninitialized(
         bytes32 secret
     ) public {
+        vm.expectRevert('Secret already spent.');
         authentica.lockSecret(secret);
-        bool resultLocked = authentica.checkLocked(secret);
-        assertEq(resultLocked, true);
     }
 
     function testLockSecretUser(
@@ -169,6 +168,7 @@ contract AuthenticaTest is MockAuthentica, Test {
         uint256[] memory newIds = new uint256[](l);
         uint256[] memory newAllowances = new uint256[](l);
         for (uint64 i = 0; i < l; ) {
+            vm.assume(allowances[i] > 0);
             newSecrets[i] = secrets[i];
             newIds[i] = ids[i];
             newAllowances[i] = allowances[i];
@@ -255,6 +255,7 @@ contract AuthenticaTest is MockAuthentica, Test {
         uint256 allowance,
         address user
     ) public {
+        vm.assume(allowance > 0);
         authentica.pushSecret(secret, id, allowance);
         authentica.lockSecret(secret);
         vm.prank(user);
@@ -271,14 +272,20 @@ contract AuthenticaTest is MockAuthentica, Test {
         uint256 id,
         uint256 allowance
     ) public {
+        vm.assume(allowance > 0);
+        authentica.pushSecret(secret, id, allowance);
         authentica.lockSecret(secret);
         vm.expectRevert('Secret locked, cannot modify.');
         authentica.pushSecret(secret, id, allowance);
     }
 
     function testLockLock(
-        bytes32 secret
+        bytes32 secret,
+        uint256 id,
+        uint256 allowance
     ) public {
+        vm.assume(allowance > 0);
+        authentica.pushSecret(secret, id, allowance);
         authentica.lockSecret(secret);
         authentica.lockSecret(secret);
         assertEq(authentica.checkLocked(secret), true);
@@ -302,6 +309,7 @@ contract AuthenticaTest is MockAuthentica, Test {
         uint256[] memory newIds = new uint256[](l);
         uint256[] memory newAllowances = new uint256[](l);
         for (uint64 i = 0; i < l; ) {
+            vm.assume(allowances[i] > 0);
             newSecrets[i] = secrets[i];
             newIds[i] = ids[i];
             newAllowances[i] = allowances[i];
@@ -309,19 +317,41 @@ contract AuthenticaTest is MockAuthentica, Test {
                 i++;
             }
         }
+        authentica.batchPushSecret(newSecrets, newIds, newAllowances);
         authentica.batchLockSecret(newSecrets);
         vm.expectRevert('Secret locked, cannot modify.');
         authentica.pushSecret(newSecrets[k], newIds[k], newAllowances[k]);
     }
 
     function testBatchLockLock(
-        bytes32[] memory secrets
+        bytes32[] memory secrets,
+        uint256[] memory ids,
+        uint256[] memory allowances,
+        uint256 l
     ) public {
-        vm.assume(secrets.length > 0);
-        authentica.batchLockSecret(secrets);
-        authentica.batchLockSecret(secrets);
-        for (uint64 i = 0; i < secrets.length; ) {
-            assertEq(authentica.checkLocked(secrets[i]), true);
+        vm.assume(
+            secrets.length > l &&
+            ids.length > l &&
+            allowances.length > l&& 
+            l > 0
+        );
+        bytes32[] memory newSecrets = new bytes32[](l);
+        uint256[] memory newIds = new uint256[](l);
+        uint256[] memory newAllowances = new uint256[](l);
+        for (uint64 i = 0; i < l; ) {
+            vm.assume(allowances[i] > 0);
+            newSecrets[i] = secrets[i];
+            newIds[i] = ids[i];
+            newAllowances[i] = allowances[i];
+            unchecked {
+                i++;
+            }
+        }
+        authentica.batchPushSecret(newSecrets, newIds, newAllowances);
+        authentica.batchLockSecret(newSecrets);
+        authentica.batchLockSecret(newSecrets);
+        for (uint64 i = 0; i < newSecrets.length; ) {
+            assertEq(authentica.checkLocked(newSecrets[i]), true);
             unchecked {
                 i++;
             }

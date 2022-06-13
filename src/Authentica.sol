@@ -80,6 +80,7 @@ contract Authentica {
     function _lockSecret(
         bytes32 secret
     ) internal virtual {
+        require(_allowancePerSecret[secret] !=0, "Secret already spent.");
         _locked[secret] = true;
     }
 
@@ -113,6 +114,7 @@ contract Authentica {
         uint256 secretsLength = secrets.length;
         require(secretsLength > 0, "Empty array.");
         for (uint256 i = 0; i < secretsLength; ) {
+            require(_allowancePerSecret[secrets[i]] !=0, "Some secrets are already spent.");
             _locked[secrets[i]] = true;
             unchecked {
                 i++;
