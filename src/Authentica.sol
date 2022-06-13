@@ -135,7 +135,6 @@ contract Authentica {
         bytes32 secret,
         bytes32 commitment
     ) internal virtual {
-        require(_tokenIds[secret] !=0, "Secret uninitialized.");
         require(_allowancePerSecret[secret] !=0, "Secret already spent.");
         _commitments[msg.sender][secret] = commitment;
         _blockTime[secret] = block.timestamp;
@@ -155,7 +154,6 @@ contract Authentica {
         require(secretsLength == commitments.length, "Length mismatch.");
         for (uint256 i = 0; i < secretsLength; ) {
             bytes32 secret = secrets[i];
-            require(_tokenIds[secret] !=0, "Some secrets are uninitialized.");
             require(_allowancePerSecret[secret] !=0, "Some secrets are already spent.");
             _commitments[msg.sender][secret] = commitments[i];
             _blockTime[secret] = block.timestamp;

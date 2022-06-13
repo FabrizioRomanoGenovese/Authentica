@@ -153,45 +153,6 @@ contract AuthenticaTest is MockAuthentica, Test {
         authentica.lockSecret(secret);
     }
 
-    function testBatchLockSecretUninitialized(
-        bytes32[] memory secrets
-    ) public {
-        vm.expectRevert('Some secrets are uninitialized, cannot lock.');
-        authentica.batchLockSecret(secrets);
-    }
-
-    function testBatchLockSecretSpent(
-        bytes32[] memory secrets,
-        uint256[] memory ids,
-        uint256[] memory allowances,
-        uint64 l,
-        uint64 k
-    ) public {
-        vm.assume(
-            secrets.length > l &&
-            ids.length > l &&
-            allowances.length > l&& 
-            l > 0 &&
-            l > k
-        );
-        bytes32[] memory newSecrets = new bytes32[](l);
-        uint256[] memory newIds = new uint256[](l);
-        uint256[] memory newAllowances = new uint256[](l);
-        for (uint64 i = 0; i < l; ) {
-            vm.assume(ids[i] != 0);
-            newSecrets[i] = secrets[i];
-            newIds[i] = ids[i];
-            newAllowances[i] = allowances[i];
-            unchecked {
-                i++;
-            }
-        }
-        newAllowances[k] = 0;
-        authentica.batchPushSecret(newSecrets, newIds, newAllowances);
-        vm.expectRevert('Some secrets are already spent, cannot lock.');
-        authentica.batchLockSecret(newSecrets);
-    }
-
     function testBatchLockSecretOwner(
         bytes32[] memory secrets,
         uint256[] memory ids,
@@ -356,7 +317,7 @@ contract AuthenticaTest is MockAuthentica, Test {
     function testBatchLockLock(
         bytes32[] memory secrets
     ) public {
-        require(secrets.length > 0);
+        vm.assume(secrets.length > 0);
         authentica.batchLockSecret(secrets);
         authentica.batchLockSecret(secrets);
         for (uint64 i = 0; i < secrets.length; ) {
@@ -392,16 +353,6 @@ contract AuthenticaTest is MockAuthentica, Test {
         vm.prank(user);
         authentica.pushCommitment(secret, commitment);
         assertEq(commitment, authentica.checkCommitment(address(user), secret));
-    }
-
-    function testPushCommitmentUninitialized(
-        bytes32 secret,
-        bytes32 commitment,
-        address user
-    ) public {
-        vm.prank(user);
-        vm.expectRevert('Secret uninitialized.');
-        authentica.pushCommitment(secret, commitment);
     }
 
     function testFailPushCommitmentWrongEverything(
@@ -484,32 +435,6 @@ contract AuthenticaTest is MockAuthentica, Test {
             }
         }
     }
-
-    function testBatchPushCommitmentSpent(
-        bytes32[] memory secrets,
-        bytes32[] memory commitments,
-        uint256 l,
-        address user
-    ) public {
-        vm.assume(
-            secrets.length > l &&
-            commitments.length > l && 
-            l > 0
-        );
-        vm.expectRevert("Some secrets are uninitialized.");
-        bytes32[] memory newSecrets = new bytes32[](l);
-        bytes32[] memory newCommitments = new bytes32[](l);
-        for (uint64 i = 0; i < l; ) {
-            newSecrets[i] = secrets[i];
-            newCommitments[i] = commitments[i];
-            unchecked {
-                i++;
-            }
-        }
-        vm.prank(user);
-        authentica.batchPushCommitment(newSecrets, newCommitments);
-    }
-
 
     /*///////////////////////////////////////////////////////////////
                               REVEAL LOGIC
